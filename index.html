@@ -1,1198 +1,1441 @@
 <!DOCTYPE html>
-<html lang="ja" class="h-full">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>チャネル政策マスター - マーケティング学習ゲーム</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チャネル政策マスター ULTRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Canvas Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            900: '#0c4a6e',
-                        },
-                        accent: {
-                            yellow: '#f59e0b',
-                            green: '#10b981',
-                            purple: '#8b5cf6',
-                            pink: '#ec4899',
-                        }
-                    },
-                    animation: {
-                        'bounce-short': 'bounce 0.5s ease-in-out 1',
-                        'shake': 'shake 0.4s ease-in-out',
-                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                        'pulse-glow': 'pulseGlow 2s infinite',
-                    },
-                    keyframes: {
-                        shake: {
-                            '0%, 100%': { transform: 'translateX(0)' },
-                            '20%, 60%': { transform: 'translateX(-8px)' },
-                            '40%, 80%': { transform: 'translateX(8px)' },
-                        },
-                        pop: {
-                            '0%': { transform: 'scale(0.8)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
-                        },
-                        pulseGlow: {
-                            '0%, 100%': { boxShadow: '0 0 15px rgba(14, 165, 233, 0.4)' },
-                            '50%': { boxShadow: '0 0 30px rgba(14, 165, 233, 0.8)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* Mobile Touch Optimizations */
-        * {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap');
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-top: env(safe-area-inset-top);
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .touch-action-manipulation {
-            touch-action: manipulation;
+
+        /* アニメーション & 特殊効果 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
         }
-        /* Custom scrollbars */
+        @keyframes bounce-happy {
+            0%, 100% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-20px) scale(1.1, 0.9); }
+            50% { transform: translateY(0) scale(0.95, 1.05); }
+            75% { transform: translateY(-8px) scale(1.02, 0.98); }
+        }
+        @keyframes shake-sad {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            20% { transform: translateX(-12px) rotate(-5deg); }
+            40% { transform: translateX(12px) rotate(5deg); }
+            60% { transform: translateX(-8px) rotate(-3deg); }
+            80% { transform: translateX(8px) rotate(3deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.9); }
+        }
+        @keyframes fever-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .char-float { animation: float 3s ease-in-out infinite; }
+        .char-happy { animation: bounce-happy 0.6s ease; }
+        .char-sad { animation: shake-sad 0.5s ease; }
+        .fever-mode {
+            background: linear-gradient(-45deg, #ff007f, #7928ca, #00dfd8, #ff007f);
+            background-size: 400% 400%;
+            animation: fever-bg 3s ease infinite;
+        }
+        .glow-gold { animation: pulse-glow 2s infinite; }
+        
+        /* カスタムスクロールバー */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 10px;
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200 select-none overflow-x-hidden">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 px-4 py-3 shadow-sm">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('home')">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
-                    <i class="fa-solid font-bold text-lg fa-truck-fast"></i>
+    <!-- ヘッダー (ステータスバー) -->
+    <header class="bg-slate-800/90 border-b border-slate-700 backdrop-blur sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <!-- ユーザーレベル & 称号 -->
+            <div class="flex items-center gap-3">
+                <div class="relative cursor-pointer" onclick="openRoadmapModal()">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center font-black text-slate-900 text-xl shadow-lg border-2 border-amber-200">
+                        <span id="header-level">1</span>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 bg-indigo-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-white">Lv</span>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                        チャネル政策マスター
-                    </h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">マーケティング第7章</p>
+                    <div class="flex items-center gap-2">
+                        <span id="header-rank" class="text-xs font-bold px-2 py-0.5 bg-indigo-900/80 text-indigo-300 rounded-full border border-indigo-700">見習いマーケター</span>
+                    </div>
+                    <!-- EXPバー -->
+                    <div class="w-28 sm:w-36 bg-slate-700 h-2.5 rounded-full mt-1.5 overflow-hidden">
+                        <div id="header-exp-bar" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Stats Header Quick View -->
-            <div class="flex items-center space-x-3 text-sm font-semibold">
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                    <i class="fa-solid fa-crown text-amber-500"></i>
-                    <span id="header-level">Lv.1</span>
+            <!-- コイン & ショップ / 道路マップボタン -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-xl border border-amber-500/30 flex items-center gap-2 shadow-inner">
+                    <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
+                    <span id="header-coins" class="font-black text-amber-300 text-lg sm:text-xl">0</span>
+                    <span class="text-xs text-amber-500 font-bold">G</span>
                 </div>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
-                    <i class="fa-solid fa-fire text-orange-500"></i>
-                    <span id="header-streak">0</span>
-                </div>
-                <button id="sound-toggle-btn" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                <button onclick="openShopModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-bold px-3 py-1.5 rounded-xl text-sm shadow-md transition active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-store"></i>
+                    <span class="hidden sm:inline">ショップ</span>
+                </button>
+                <button onclick="openRoadmapModal()" class="bg-slate-700 hover:bg-slate-600 text-indigo-300 font-bold p-2 sm:px-3 sm:py-1.5 rounded-xl text-sm transition active:scale-95 flex items-center gap-1.5 border border-indigo-500/30">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span class="hidden sm:inline">報酬</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-start">
+    <!-- メインコンテンツ領域 -->
+    <main class="max-w-4xl w-full mx-auto p-4 flex-grow flex flex-col justify-center items-center">
         
-        <!-- ================= HOME SCREEN ================= -->
-        <section id="screen-home" class="space-y-6 animate-pop">
-            <!-- User Status Card -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-indigo-600 to-purple-700 p-6 text-white shadow-xl">
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-                <div class="relative z-10 space-y-4">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm mb-2">学習ステータス</span>
-                            <h2 class="text-2xl font-black tracking-wide" id="user-title">見習いマーケター</h2>
+        <!-- モード選択ビュー (メイン画面) -->
+        <div id="view-mode-select" class="w-full space-y-6">
+            <!-- キャラクター表示エリア -->
+            <div class="bg-gradient-to-b from-slate-800 to-slate-800/40 rounded-3xl p-6 border border-slate-700 text-center relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+                
+                <!-- キャラクターSVG -->
+                <div id="main-character-container" class="relative w-36 h-36 mx-auto char-float cursor-pointer" onclick="triggerCharacterInteraction()">
+                    <svg id="main-character-svg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-2xl">
+                        <!-- ベース猫（ニャン吉） -->
+                        <g id="char-body">
+                            <ellipse cx="100" cy="115" rx="55" ry="50" fill="#fbbf24"/>
+                            <!-- 耳 -->
+                            <polygon points="50,75 30,30 75,55" fill="#f59e0b"/>
+                            <polygon points="55,70 40,40 70,58" fill="#fef08a"/>
+                            <polygon points="150,75 170,30 125,55" fill="#f59e0b"/>
+                            <polygon points="145,70 160,40 130,58" fill="#fef08a"/>
+                            <!-- お腹 -->
+                            <ellipse cx="100" cy="125" rx="35" ry="30" fill="#fef08a"/>
+                        </g>
+                        <!-- 衣装・アクセ枠 -->
+                        <g id="char-outfit"></g>
+                        <!-- 表情 -->
+                        <g id="char-face">
+                            <!-- 目 -->
+                            <circle class="eye-left" cx="80" cy="100" r="8" fill="#1e293b"/>
+                            <circle class="eye-right" cx="120" cy="100" r="8" fill="#1e293b"/>
+                            <circle cx="82" cy="98" r="2.5" fill="#fff"/>
+                            <circle cx="122" cy="98" r="2.5" fill="#fff"/>
+                            <!-- ほっぺ -->
+                            <ellipse cx="70" cy="110" rx="6" ry="4" fill="#f43f5e" opacity="0.6"/>
+                            <ellipse cx="130" cy="110" rx="6" ry="4" fill="#f43f5e" opacity="0.6"/>
+                            <!-- 口 -->
+                            <path id="char-mouth" d="M 90 112 Q 100 122 110 112" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                        </g>
+                        <!-- メガネ等頭部アクセ枠 -->
+                        <g id="char-hat"></g>
+                    </svg>
+                    <!-- フキダシ -->
+                    <div id="char-bubble" class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-amber-400 whitespace-nowrap transition-all duration-300 scale-100">
+                        今日もチャネル政策を極めよう！
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h2 class="text-xl font-black text-amber-300">相棒：チャネルキャット</h2>
+                    <p class="text-xs text-slate-400 mt-1">「タップして遊んでね！全120問＋100問ダンジョンが待ってるニャ！」</p>
+                </div>
+            </div>
+
+            <!-- モード選択ボタン群 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 各章モード (30問/章 = 計120問) -->
+                <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700 hover:border-indigo-500 transition shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-indigo-500/20 text-indigo-300 text-xs font-bold px-2.5 py-1 rounded-lg border border-indigo-500/30">ステージ制 (小分け)</span>
+                            <span class="text-xs text-slate-400 font-bold">全4章（各30問）</span>
                         </div>
-                        <div class="text-right">
-                            <span class="text-xs opacity-80">総スコア</span>
-                            <div class="text-2xl font-black" id="total-score-display">0</div>
+                        <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-book-open text-indigo-400 mr-2"></i>章別ステージ攻略</h3>
+                        <p class="text-xs text-slate-400 mb-4">教科書の第1章〜第4章を5問ずつの小ステージで着実にマスター！複数選択問題も登場。</p>
+                    </div>
+                    <button onclick="openChapterSelectModal()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-98 flex justify-center items-center gap-2">
+                        <span>章を選択して挑戦</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- 総まとめ 100問 ダンジョンモード -->
+                <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700 hover:border-amber-500 transition shadow-lg flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-lg border border-amber-500/30">10階層（各10問）</span>
+                            <span class="text-xs text-amber-400 font-bold"><i class="fa-solid fa-fire mr-1"></i>サクッと10問</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-amber-300 mb-2"><i class="fa-solid fa-dungeon text-amber-400 mr-2"></i>総まとめ100問ダンジョン</h3>
+                        <p class="text-xs text-slate-400 mb-4">重要重要ワード完全網羅！10階層に小分けされているので隙間時間で1階（10問）ずつ進められる！</p>
+                    </div>
+                    <button onclick="openDungeonSelectModal()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-black py-3 rounded-xl shadow-lg transition active:scale-98 flex justify-center items-center gap-2">
+                        <span>ダンジョン階層選択</span>
+                        <i class="fa-solid fa-skull"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- クイズ進行ビュー -->
+        <div id="view-quiz" class="w-full hidden space-y-4">
+            <!-- クイズステータスヘッダー -->
+            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-md">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <span id="quiz-stage-title" class="text-xs font-bold px-2.5 py-1 bg-indigo-900/80 text-indigo-300 rounded-lg border border-indigo-700">第1章 - Stage 1</span>
+                        <span id="quiz-type-badge" class="text-xs font-bold px-2.5 py-1 bg-emerald-900/80 text-emerald-300 rounded-lg border border-emerald-700">単一選択</span>
+                    </div>
+                    <!-- ライフ & コンボ -->
+                    <div class="flex items-center gap-4">
+                        <div id="fever-indicator" class="hidden text-xs font-black text-amber-300 animate-pulse px-2 py-0.5 bg-amber-500/20 rounded border border-amber-500/40">
+                            🔥 FEVER x2
+                        </div>
+                        <div class="text-amber-400 font-bold text-sm">
+                            <i class="fa-solid fa-bolt text-yellow-400 mr-1"></i>
+                            <span id="quiz-combo">0</span> Combo
                         </div>
                     </div>
+                </div>
 
-                    <!-- Level Progress Bar -->
-                    <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-medium opacity-90">
-                            <span id="level-label">Level 1</span>
-                            <span id="xp-label">0 / 100 XP</span>
-                        </div>
-                        <div class="w-full h-3 bg-black/20 rounded-full overflow-hidden p-0.5 backdrop-blur-sm">
-                            <div id="xp-bar" class="h-full bg-gradient-to-r from-amber-300 to-amber-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
+                <!-- プログレスバー & 制限時間バー -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs text-slate-400 font-bold">
+                        <span>進捗: <span id="quiz-progress-text">1 / 5</span></span>
+                        <span>残り時間: <span id="quiz-timer-text">20</span>s</span>
                     </div>
-
-                    <!-- Overall Master Meter -->
-                    <div class="pt-2 border-t border-white/15 flex items-center justify-between text-xs md:text-sm">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-chart-line text-emerald-300"></i>
-                            <span>第7章 全体理解度</span>
-                        </div>
-                        <div class="font-bold text-emerald-300 text-base" id="overall-mastery-text">0%</div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="quiz-progress-bar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 20%"></div>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1 rounded-full overflow-hidden">
+                        <div id="quiz-timer-bar" class="bg-amber-400 h-full transition-all duration-100" style="width: 100%"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Mode Selection Buttons -->
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="showScreen('chapters')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col items-center justify-center space-y-2 group active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
-                        <i class="fa-solid fa-book-open"></i>
+            <!-- クイズメインカード -->
+            <div id="quiz-card" class="bg-slate-800 rounded-3xl p-6 border border-slate-700 shadow-xl relative overflow-hidden transition-all">
+                <!-- キャラクターリアクションエリア -->
+                <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-700/80">
+                    <div class="w-16 h-16 flex-shrink-0 relative">
+                        <svg id="quiz-char-svg" viewBox="0 0 200 200" class="w-full h-full">
+                            <!-- ミニキャラクター複製用 -->
+                        </svg>
                     </div>
-                    <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">章別ドリル</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">各20問 全4章</span>
-                </button>
-
-                <button onclick="startMode('final')" class="p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition flex flex-col items-center justify-center space-y-2 group active:scale-95 relative overflow-hidden">
-                    <div class="absolute top-2 right-2 px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider">挑戦</div>
-                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl group-hover:scale-110 transition">
-                        <i class="fa-solid fa-trophy"></i>
-                    </div>
-                    <span class="font-bold text-sm">重要単語100問</span>
-                    <span class="text-xs opacity-90">全範囲のスピードテスト</span>
-                </button>
-
-                <button onclick="startMode('weak')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col items-center justify-center space-y-2 group active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                    </div>
-                    <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">弱点克服</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400" id="weak-count-label">間違えた問題 (0)</span>
-                </button>
-
-                <button onclick="showScreen('dictionary')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col items-center justify-center space-y-2 group active:scale-95">
-                    <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
-                        <i class="fa-solid fa-spell-check"></i>
-                    </div>
-                    <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">用語図鑑</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">解説＆チェック</span>
-                </button>
-            </div>
-
-            <!-- Chapter Progress Summary Section -->
-            <div class="space-y-3">
-                <h3 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">章ごとの習得状況</h3>
-                <div class="space-y-2.5" id="chapter-list-summary">
-                    <!-- Dynamic rendering -->
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= CHAPTER SELECTION SCREEN ================= -->
-        <section id="screen-chapters" class="hidden space-y-4 animate-pop">
-            <div class="flex items-center space-x-3 mb-2">
-                <button onclick="showScreen('home')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-black">学習する章を選択</h2>
-            </div>
-
-            <div class="space-y-3" id="chapter-selection-list">
-                <!-- Chapter items populated dynamically -->
-            </div>
-        </section>
-
-        <!-- ================= QUIZ PLAY SCREEN ================= -->
-        <section id="screen-quiz" class="hidden space-y-4 flex-1 flex flex-col">
-            <!-- Quiz Progress & Combo Bar -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
-                <div class="flex justify-between items-center text-sm">
-                    <div class="flex items-center space-x-2">
-                        <span id="quiz-chapter-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">第1節</span>
-                        <span id="quiz-question-num" class="font-bold">問 1 / 20</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <div id="combo-container" class="hidden items-center space-x-1 text-amber-500 font-black animate-bounce-short">
-                            <i class="fa-solid fa-bolt"></i>
-                            <span id="combo-count">3</span> COMBO!
-                        </div>
-                        <button onclick="confirmExitQuiz()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
-                            <i class="fa-solid fa-xmark text-lg"></i>
-                        </button>
+                    <div id="quiz-char-speech" class="bg-slate-700/60 p-3 rounded-2xl text-xs sm:text-sm text-slate-200 border border-slate-600 flex-grow relative">
+                        問題文をよく読んで正解を選んでね！
                     </div>
                 </div>
 
-                <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-sky-500 to-indigo-600 h-full transition-all duration-300" style="width: 0%"></div>
+                <!-- 選択数ガイド (複数選択用) -->
+                <div id="multi-select-guide" class="hidden mb-3 p-2 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center justify-between">
+                    <span><i class="fa-solid fa-square-check mr-1.5"></i>該当するものを全て選んで「回答確定」を押してね！</span>
+                    <span id="selected-count-badge" class="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded-full font-black">選択中: 0</span>
                 </div>
-            </div>
 
-            <!-- Question Card -->
-            <div id="question-card" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md space-y-4 transition-all duration-200 min-h-[160px] flex flex-col justify-center">
-                <div class="flex items-center space-x-2 text-xs text-sky-600 dark:text-sky-400 font-semibold">
-                    <i class="fa-solid fa-circle-question"></i>
-                    <span id="question-type-label">4択問題</span>
-                </div>
-                <h3 id="question-text" class="text-lg md:text-xl font-bold leading-relaxed">
+                <!-- 問題文 -->
+                <h3 id="quiz-question" class="text-base sm:text-lg font-bold text-white leading-relaxed mb-6">
                     問題文がここに入ります。
                 </h3>
-            </div>
 
-            <!-- Choices / Input Section -->
-            <div id="choices-container" class="grid grid-cols-1 gap-3 my-auto">
-                <!-- Choice buttons injected dynamically -->
-            </div>
+                <!-- 選択肢コンテナ -->
+                <div id="quiz-options" class="space-y-3">
+                    <!-- 動的生成 -->
+                </div>
 
-            <!-- Feedback & Explanation Card (Initially Hidden) -->
-            <div id="explanation-card" class="hidden rounded-2xl p-5 space-y-3 transition-all duration-300 border">
-                <div class="flex items-center space-x-3">
-                    <div id="feedback-icon" class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    </div>
-                    <div>
-                        <h4 id="feedback-title" class="font-black text-lg"></h4>
-                        <p id="feedback-subtitle" class="text-xs opacity-80"></p>
-                    </div>
-                </div>
-                <div id="explanation-text" class="text-sm leading-relaxed border-t pt-3 opacity-95">
-                    解説がここに表示されます。
-                </div>
-                <button id="next-question-btn" onclick="nextQuestion()" class="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-base hover:opacity-90 active:scale-98 transition shadow-md flex items-center justify-center space-x-2 touch-action-manipulation">
-                    <span>次の問題へ</span>
-                    <i class="fa-solid fa-arrow-right"></i>
+                <!-- 複数選択用 確定ボタン -->
+                <button id="btn-submit-multi" onclick="submitMultiChoice()" class="hidden w-full mt-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-900 font-black py-3.5 rounded-2xl shadow-lg transition active:scale-98 flex justify-center items-center gap-2 text-base">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>回答を確定する</span>
                 </button>
             </div>
-        </section>
+        </div>
 
-        <!-- ================= RESULT SCREEN ================= -->
-        <section id="screen-result" class="hidden space-y-6 text-center animate-pop">
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl space-y-6 relative overflow-hidden">
-                <div class="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-900/40 text-amber-500 flex items-center justify-center text-4xl shadow-inner">
-                    <i class="fa-solid fa-trophy" id="result-badge-icon"></i>
+        <!-- リザルトビュー -->
+        <div id="view-result" class="w-full hidden space-y-6 max-w-lg mx-auto">
+            <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700 text-center shadow-2xl relative overflow-hidden">
+                <div id="result-rank-badge" class="inline-block px-4 py-1.5 rounded-full text-lg font-black bg-amber-500 text-slate-900 mb-4 shadow-lg">
+                    RANK S
                 </div>
+                
+                <h2 id="result-title" class="text-2xl font-black text-white mb-2">ステージクリア！</h2>
+                <p id="result-subtitle" class="text-xs text-slate-400 mb-6">素晴らしい集中力ニャ！</p>
 
-                <div class="space-y-2">
-                    <h2 class="text-2xl font-black" id="result-title">クリアおめでとう！</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400" id="result-subtitle">素晴らしい集中力です！</p>
-                </div>
-
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl">
-                    <div>
-                        <span class="text-xs text-slate-400 block mb-1">正解率</span>
-                        <span class="text-xl md:text-2xl font-black text-sky-600 dark:text-sky-400" id="result-accuracy">0%</span>
+                <!-- 獲得報奨まとめ -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">正解率</div>
+                        <div id="result-score-text" class="text-xl font-black text-indigo-400">5 / 5 (100%)</div>
                     </div>
-                    <div>
-                        <span class="text-xs text-slate-400 block mb-1">獲得XP</span>
-                        <span class="text-xl md:text-2xl font-black text-amber-500" id="result-xp">+0</span>
+                    <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">獲得ゴールド</div>
+                        <div class="text-xl font-black text-amber-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-coins text-sm"></i>
+                            <span id="result-coins-text">+150 G</span>
+                        </div>
                     </div>
-                    <div>
-                        <span class="text-xs text-slate-400 block mb-1">最大コンボ</span>
-                        <span class="text-xl md:text-2xl font-black text-purple-500" id="result-max-combo">0</span>
+                    <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">最大コンボ</div>
+                        <div id="result-maxcombo-text" class="text-xl font-black text-yellow-400">5 Combo</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">獲得経験値</div>
+                        <div id="result-exp-text" class="text-xl font-black text-emerald-400">+50 EXP</div>
                     </div>
                 </div>
 
-                <!-- Score breakdown -->
-                <p class="text-sm font-semibold" id="result-score-detail">20問中 18問正解</p>
-
-                <div class="space-y-3 pt-2">
-                    <button onclick="retryCurrentQuiz()" class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-2xl shadow-lg shadow-sky-500/25 active:scale-98 transition touch-action-manipulation flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-rotate-right"></i>
-                        <span>もう一度挑戦する</span>
+                <div class="flex gap-3">
+                    <button onclick="returnToMainMode()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition text-sm">
+                        メニューに戻る
                     </button>
-                    <button onclick="showScreen('home')" class="w-full py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition touch-action-manipulation">
-                        ホームに戻る
+                    <button id="btn-next-stage" onclick="nextStageOrRetry()" class="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition text-sm shadow-lg">
+                        次のステージへ
                     </button>
                 </div>
             </div>
-        </section>
-
-        <!-- ================= DICTIONARY / GLOSSARY SCREEN ================= -->
-        <section id="screen-dictionary" class="hidden space-y-4 animate-pop">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center space-x-3">
-                    <button onclick="showScreen('home')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                    <h2 class="text-xl font-black">第7章 重要用語図鑑</h2>
-                </div>
-            </div>
-
-            <!-- Search and Filter Bar -->
-            <div class="space-y-2">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                    <input type="text" id="dict-search-input" placeholder="キーワード・用語を検索..." oninput="filterDictionary()" class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div class="flex space-x-2 overflow-x-auto pb-1" id="dict-category-tabs">
-                    <button onclick="setDictCategory('all')" class="dict-tab active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-sky-600 text-white">すべて</button>
-                    <button onclick="setDictCategory(1)" class="dict-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">第1節 概要</button>
-                    <button onclick="setDictCategory(2)" class="dict-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">第2節 選択・管理</button>
-                    <button onclick="setDictCategory(3)" class="dict-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">第3節 動向</button>
-                    <button onclick="setDictCategory(4)" class="dict-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">第4節 ネット・オムニ</button>
-                </div>
-            </div>
-
-            <!-- Terms Cards Container -->
-            <div id="dictionary-list" class="space-y-3">
-                <!-- Terms loaded dynamically -->
-            </div>
-        </section>
+        </div>
 
     </main>
 
-    <!-- Modal Dialog (For confirmations or Level Up) -->
-    <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div id="modal-content" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl animate-pop border border-slate-200 dark:border-slate-700">
-            <!-- Modal Body injected via JS -->
+    <!-- モーダル: 章＆ステージ選択 -->
+    <div id="modal-chapter-select" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-indigo-400"></i>
+                    学習章＆ステージ選択
+                </h3>
+                <button onclick="closeModal('modal-chapter-select')" class="text-slate-400 hover:text-white p-2 text-xl">&times;</button>
+            </div>
+            
+            <div class="overflow-y-auto space-y-4 pr-1 flex-grow" id="chapter-list-container">
+                <!-- JSで動的生成 -->
+            </div>
         </div>
     </div>
 
-    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <!-- モーダル: ダンジョン階層選択 -->
+    <div id="modal-dungeon-select" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-xl w-full p-6 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-dungeon text-amber-400"></i>
+                    総まとめ100問ダンジョン階層
+                </h3>
+                <button onclick="closeModal('modal-dungeon-select')" class="text-slate-400 hover:text-white p-2 text-xl">&times;</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">10階層（各10問）で全重要用語をマスター！1階層ずつサクッと解けます。</p>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 overflow-y-auto pr-1 flex-grow" id="dungeon-list-container">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル: ショップ (Shop & Customization) -->
+    <div id="modal-shop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+                        <i class="fa-solid fa-store text-amber-400"></i>
+                        きせかえ＆便利ショップ
+                    </h3>
+                    <div class="bg-slate-900 px-3 py-1 rounded-xl text-amber-400 font-bold text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-coins"></i>
+                        <span id="shop-coins-display">0</span> G
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-shop')" class="text-slate-400 hover:text-white p-2 text-xl">&times;</button>
+            </div>
+
+            <div class="overflow-y-auto flex-grow pr-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="shop-items-container">
+                    <!-- 動的生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル: ロードマップ＆報酬 (Level Rewards) -->
+    <div id="modal-roadmap" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-xl w-full p-6 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    レベルロードマップ＆特典報酬
+                </h3>
+                <button onclick="closeModal('modal-roadmap')" class="text-slate-400 hover:text-white p-2 text-xl">&times;</button>
+            </div>
+
+            <div class="overflow-y-auto space-y-3 flex-grow pr-1" id="roadmap-items-container">
+                <!-- 動的生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- フッター -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
+        チャネル政策マスター ULTRA - 教科書「第7章」完全対応Webアプリ
+    </footer>
+
     <script>
         /* ==========================================================================
-           AUDIO SYNTHESIZER (Web Audio API - No external assets required)
+           Web Audio API 音声効果音ジェネレータ
            ========================================================================== */
-        class SoundManager {
-            constructor() {
-                this.ctx = null;
-                this.enabled = true;
-            }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
 
-            init() {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) this.ctx = new AudioCtx();
-                }
-            }
-
-            playCorrect() {
-                if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
-                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
-
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start(now);
-                osc.stop(now + 0.35);
-            }
-
-            playWrong() {
-                if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(180, now);
-                osc.frequency.linearRampToValueAtTime(110, now + 0.25);
-
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start(now);
-                osc.stop(now + 0.3);
-            }
-
-            playLevelUp() {
-                if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
-                const now = this.ctx.currentTime;
-                const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
-                notes.forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.15, now + i * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.3);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.08);
-                    osc.stop(now + i * 0.08 + 0.3);
-                });
-            }
-
-            playFanfare() {
-                if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
-                const now = this.ctx.currentTime;
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.2, now + i * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.1);
-                    osc.stop(now + i * 0.1 + 0.4);
-                });
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
             }
         }
 
-        const sound = new SoundManager();
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.setValueAtTime(130, now + 0.15);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'coin') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(987.77, now); // B5
+                    osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'levelup') {
+                    osc.type = 'triangle';
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((freq, i) => {
+                        osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                    });
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
 
         /* ==========================================================================
-           DATA SOURCE: CHAPTER 7 CHANNEL POLICY (COMPLETE 80 + 20 DETAILED QUESTIONS)
+           ゲーム状態 & プレイヤーデータ
            ========================================================================== */
-        const chapterData = [
-            {
-                id: 1,
-                title: "第1節 チャネル政策の概要",
-                desc: "チャネルの基本・直接/間接流通・3つの流れ",
-                icon: "fa-diagram-project"
-            },
-            {
-                id: 2,
-                title: "第2節 チャネルの選択と管理",
-                desc: "チャネルの長さ・消費財/生産財・3つの選択肢・管理",
-                icon: "fa-store"
-            },
-            {
-                id: 3,
-                title: "第3節 チャネル政策の動向",
-                desc: "POS・JAN/SKU・EOS/EDI・RFID・SCM・SPA",
-                icon: "fa-network-wired"
-            },
-            {
-                id: 4,
-                title: "第4節 ネット通販・オムニチャネル",
-                desc: "PB/NB商品・EC市場・ショールーミング",
-                icon: "fa-cart-shopping"
-            }
+        const player = {
+            level: 1,
+            exp: 0,
+            coins: 100,
+            equippedHat: null,
+            equippedOutfit: null,
+            inventory: [],
+            chapterProgress: { 1: 0, 2: 0, 3: 0, 4: 0 }, // 各章のクリア済ステージ数
+            dungeonProgress: 0, // クリア済ダンジョン階層数
+        };
+
+        const LEVEL_TITLES = [
+            "見習いマーケター", "流通ビギナー", "チャネル分析士", "サプライチェーン主任",
+            "オムニチャネル戦略家", "ロジスティクス専門家", "カテゴリーマネージャー",
+            "チャネル統括ディレクター", "マーケティング最高責任者", "チャネル神"
         ];
 
-        // Question Repository (20 questions per chapter = 80 original + variations)
-        const quizDatabase = {
-            1: [
-                { q: "メーカーが製品を製造してから消費者の手元に届くまでの経路のことを何というか？", options: ["チャネル（流通経路）", "プロモーション", "プロダクト・ミックス", "ロジスティクス"], ans: 0, exp: "チャネル（Marketing Channel）とは、製品がメーカーから消費者に届くまでの流通経路のことです。" },
-                { q: "メーカーが消費者へ直接製品を販売する形態を何というか？", options: ["直接流通", "間接流通", "開放的流通", "多段階流通"], ans: 0, exp: "卸売業者や小売業者を挟まず、メーカーが直接消費者に売ることを「直接流通」と呼びます。" },
-                { q: "流通業者のうち、主として「消費者以外（企業など）」に販売する事業者を何というか？", options: ["卸売業者", "小売業者", "製造業者", "代理店"], ans: 0, exp: "卸売業者はメーカー等から仕入れ、主に小売業者や他の企業へ販売を行います。" },
-                { q: "流通業者のうち、主として「最終消費者」に販売する事業者を何というか？", options: ["小売業者", "卸売業者", "物流業者", "買受人"], ans: 0, exp: "小売業者（コンビニ、スーパー、専門店など）は最終消費者に販売する役割を持ちます。" },
-                { q: "流通の機能のうち、売買取引によって「所有権が移転する流れ」を何というか？", options: ["商流（取引流）", "物流", "情報流", "金銭流"], ans: 0, exp: "所有権の移動に伴う取引の流れを「商流」と呼びます。" },
-                { q: "流通の機能のうち、製品の物理的な移動や保管を担当する流れを何というか？", options: ["物流", "商流", "情報流", "業務流"], ans: 0, exp: "輸送や倉庫保管など、物理的なモノの移動を「物流」と呼びます。" },
-                { q: "受発注データや市場ニーズなどの情報がやり取りされる流れを何というか？", options: ["情報流", "商流", "物流", "データ流"], ans: 0, exp: "市場の需要情報や受発注情報を双方向でやり取りすることを「情報流」と呼びます。" },
-                { q: "生産者と消費者が異なる場所・時間・所有に分離している社会を解体・媒介する活動全般を何というか？", options: ["流通活動", "生産活動", "消費活動", "開発活動"], ans: 0, exp: "生産と消費の間にある隔たり（隔差）を解消するのが「流通」の社会的役割です。" },
-                { q: "メーカーが自社のWebサイトで消費者に直接衣料品を売る行為はどちらにあてはまるか？", options: ["直接流通", "間接流通", "委託流通", "特約流通"], ans: 0, exp: "中間業者を通さず直販しているため「直接流通」です。" },
-                { q: "卸売業者と小売業者の2つを合わせて何と呼ぶか？", options: ["流通業者（流通業）", "製造業者", "広告代理店", "物流倉庫業"], ans: 0, exp: "卸売業と小売業を総称して「流通業者」と呼びます。" },
-                { q: "商流の中心となる活動はどれか？", options: ["売買契約と所有権移転", "トラックでの運送", "商品の包装・梱包", "Posレジの保守"], ans: 0, exp: "商流は所有権の移転や売買契約が中心です。" },
-                { q: "物流を担当する主な業種に含まれないものはどれか？", options: ["広告代理店", "運送業", "倉庫業", "貨物運送取扱業"], ans: 0, exp: "広告代理店は情報流やプロモーションを担う事業者です。" },
-                { q: "流通における「所有権の隔たり」を解消する主な機能はどれか？", options: ["商流（売買）", "物流（輸送）", "保管機能", "加工機能"], ans: 0, exp: "売買契約により所有権が買い手に移ることで「所有権の隔たり」が解消されます。" },
-                { q: "流通における「場所の隔たり」を解消する主な機能はどれか？", options: ["物流（輸送）", "商流", "情報流", "金融機能"], ans: 0, exp: "生産地と消費地が離れている問題は、輸送（物流）によって解消されます。" },
-                { q: "流通における「時間の隔たり」を解消する主な機能はどれか？", options: ["保管（倉庫）", "輸送", "売買", "広告"], ans: 0, exp: "生産時期と消費時期のズレは「保管」によって解消されます。" },
-                { q: "間接流通を選択する主なメリットはどれか？", options: ["流通費用（販売網構築コスト）を低減できる", "消費者の生の声を直接100%収集できる", "販売価格を完全にコントロールできる", "他社製品との競合を完全に排除できる"], ans: 0, exp: "既存の流通網（卸・小売）を利用することで自社で膨大な店舗・営業網を抱えずに済みます。" },
-                { q: "自給自足を抜け出し、得意な分野に集中して生産する社会構造を何というか？", options: ["分業化社会", "中央集権社会", "大規模化社会", "情報化社会"], ans: 0, exp: "分業化が進んだことで、生産者と消費者が分離し流通が必要となりました。" },
-                { q: "メーカーから卸売業者、小売業者を経て消費者に至る一般的な流通はどれか？", options: ["間接流通", "直接流通", "内部流通", "バイパス流通"], ans: 0, exp: "中間業者を挟む流通形態を「間接流通」と呼びます。" },
-                { q: "チャネル政策（4PのPlace）の目的として最も適切なものはどれか？", options: ["消費者が購入しやすい場所に効率よく製品を届けること", "製品の原価を限界まで下げること", "テレビCMの放映頻度を最大化すること", "製品のデザインを頻繁に変更すること"], ans: 0, exp: "チャネル政策（Place）は、最適なターゲット層に最適な場所・タイミングで製品を提供することを目指します。" },
-                { q: "情報流の説明として正しくないものはどれか？", options: ["製品そのものがトラックで移動すること", "売れ行きデータが本部へ送信されること", "メーカーから製品カタログが送られること", "消費者の口コミがメーカーに届くこと"], ans: 0, exp: "製品そのものの物理的移動は「物流」です。" }
-            ],
-            2: [
-                { q: "流通業者を入れることで、メーカーと多数の消費者が直接やり取りするより取引回数が減る原理を何というか？", options: ["取引回数削減の原理", "規模の経済性", "範囲の経済性", "商業集積の原理"], ans: 0, exp: "卸売・小売などの仲介が入ることで、社会全体の総取引数が劇的に減少します。" },
-                { q: "一般の消費者が日常的に購入する製品（食品、日用品など）を何というか？", options: ["消費財", "生産財", "資本財", "中間財"], ans: 0, exp: "個人や家庭が消費するために購入する製品を「消費財」と呼びます。" },
-                { q: "企業が製品の製造・加工のために購入する原材料や部品などを何というか？", options: ["生産財", "消費財", "耐久財", "最買財"], ans: 0, exp: "ビジネス目的で仕入れる原料や設備などを「生産財」と呼びます。" },
-                { q: "消費財の流通チャネルの特徴として正しいものはどれか？", options: ["多数の消費者に届けるため「長いチャネル」になりやすい", "買い手が限定されるため「短いチャネル」になりやすい", "常に直接流通のみが用いられる", "卸売業者が関与することは絶対にない"], ans: 0, exp: "消費財は買い手が全国に無数に存在するため、多段階の「長いチャネル」になりがちです。" },
-                { q: "生産財の流通チャネルの特徴として正しいものはどれか？", options: ["顧客数が限られ大口取引が多いため「短いチャネル」になりやすい", "常に無数の卸売業者を経由する", "店舗での対面販売が主流である", "チャネルが最も長くなる"], ans: 0, exp: "生産財はBtoB（企業間取引）であり特定多数との取引になるため「短いチャネル（直接または1段階）」が多いです。" },
-                { q: "メーカーが自社製品のみを取り扱わせ、他社製品の取り扱いを認めない排他的なチャネル選択はどれか？", options: ["排他的チャネル（専属的チャネル）", "選択的チャネル", "開放的チャネル", "無差別チャネル"], ans: 0, exp: "高級ブランドや自動車など、自社系列店に限定する方式を「排他的チャネル」と呼びます。" },
-                { q: "メーカーが一定の基準を満たした販売店を選定して取り扱わせるチャネル選択はどれか？", options: ["選択的チャネル", "排他的チャネル", "開放的チャネル", "全方位チャネル"], ans: 0, exp: "家電や化粧品、ブランド服などで、イメージや販売力を基準に店舗を選ぶ方式です。" },
-                { q: "製品をできる限り多くの店舗に並べ、消費者の接触機会を最大化するチャネル選択はどれか？", options: ["開放的チャネル", "選択的チャネル", "排他的チャネル", "限定的チャネル"], ans: 0, exp: "お菓子や飲料、日用品など最寄品で用いられるのが「開放的チャネル」です。" },
-                { q: "最寄品（清涼飲料やスナック菓子など）に適したチャネル政策はどれか？", options: ["開放的チャネル", "排他的チャネル", "選択的チャネル", "直営店限定チャネル"], ans: 0, exp: "どこでも買える利便性が重要な最寄品には開放的チャネルが最適です。" },
-                { q: "高級自動車や高級宝飾品などに適したチャネル政策はどれか？", options: ["排他的チャネル", "開放的チャネル", "無差別チャネル", "多段階開放チャネル"], ans: 0, exp: "ブランドイメージの保持や手厚いアフターサービスが必要なため排他的チャネルが適します。" },
-                { q: "同じカテゴリーの中で、異なるメーカーの製品を比較検討して購入する行動を何というか？", options: ["比較購買", "関連購買", "指名買い", "ついで買い"], ans: 0, exp: "品質や価格を他社製品と比べながら選ぶ買い方を「比較購買」と呼びます。" },
-                { q: "パンとバターのように、関連する商品を一緒に買い揃える行動を何というか？", options: ["関連購買", "比較購買", "指名買い", "衝動買い"], ans: 0, exp: "組み合わせによって需要が生まれる商品をまとめて買うことを「関連購買」と言います。" },
-                { q: "消費者が最初から特定のブランドや銘柄を指定して購入することを何というか？", options: ["指名買い", "比較購買", "関連購買", "探訪購買"], ans: 0, exp: "「このブランドのこのモデル」と決めて来店・購入することを「指名買い」と呼びます。" },
-                { q: "メーカーが流通業者に対して行う販売手当金の支給やPOP広告の提供などの支援活動を何というか？", options: ["売買指導（販売援助/リテールサポート）", "価格破壊", "チャネルのカット", "購買抑制"], ans: 0, exp: "流通業者の販売意欲を高め、売り場づくりをサポートすることを販売援助（リテールサポート）等と呼びます。" },
-                { q: "メーカーが流通業者へ直接働きかける施策（マージン付与や支援）を何というか？", options: ["直接的な働きかけ（プッシュ戦略的働きかけ）", "間接的な働きかけ", "消費者囲い込み", "バイパス戦略"], ans: 0, exp: "流通業者を押し出す（Push）ための直接的な協力関係づくりです。" },
-                { q: "メーカーが大規模な広告を出して消費者に指名買いさせ、流通業者に扱わせる施策を何というか？", options: ["間接的な働きかけ（プル戦略的働きかけ）", "直接的な働きかけ", "チャネル排除", "スポット取引"], ans: 0, exp: "消費者の購買意欲を引き出す（Pull）ことで、流通業者に「置かざるを得ない」状況を作ります。" },
-                { q: "開放的チャネルのデメリットとして当てはまるものはどれか？", options: ["価格競争が激化し、ブランドイメージが低下しやすい", "流通費用が全くかからなくなる", "販売店のコントロールが極めて容易になる", "製品の露出度が極端に低くなる"], ans: 0, exp: "多数の店で売られるため安売り競争が起きやすく、管理が難しくなります。" },
-                { q: "排他的チャネルのメリットとして正しいものはどれか？", options: ["販売店コントロールが容易で、質の高い接客やイメージ維持ができる", "市場シェアを短期間で一気に拡大できる", "流通コストが最も安く済む", "消費者がどこでも手軽に買えるようになる"], ans: 0, exp: "手厚いコントロールが可能となり、ブランド力や価格維持が容易になります。" },
-                { q: "家電メーカーが特定の系列電気店（街の電気屋さん）を支援する事例は何にあたるか？", options: ["選択的・排他的チャネルとリテールサポート", "開放的チャネルと放置政策", "直営ECのみの直接流通", "無差別大量販売"], ans: 0, exp: "系列店への技術指導や看板提供などの手厚いサポート事例です。" },
-                { q: "「取引数の削減」を数式で表す際、メーカー3社と消費者10人が直接取引する場合の取引数は何回か？", options: ["30回", "13回", "16回", "10回"], ans: 0, exp: "直接取引では 3 × 10 = 30回の取引が発生します。（卸を挟むと 3+10=13回に激減）" }
-            ],
-            3: [
-                { q: "販売時点の情報（いつ、どの商品が、いくらで売れたか）をリアルタイムで管理するシステムはどれか？", options: ["POSシステム", "EOS", "EDI", "RFID"], ans: 0, exp: "POS（Point of Sale：販売時点情報管理）システムはレジでバーコードを読み取りデータを蓄積します。" },
-                { q: "JANコードなどのバーコードに登録されている、在庫管理の最小単位を何というか？", options: ["SKU（単品）", "LOT", "BOX", "CATEGORY"], ans: 0, exp: "SKU（Stock Keeping Unit）は色やサイズまで区別する在庫管理の最小単位（単品）です。" },
-                { q: "コンピュータ・ネットワークを利用して、店舗と卸・メーカー間でオンライン発注を行うシステムはどれか？", options: ["EOS（電子発注システム）", "POS", "CAD", "GPS"], ans: 0, exp: "EOS（Electronic Ordering System）は手作業の発注票をデジタル化し電子発注する仕組みです。" },
-                { q: "異なる企業間（メーカー、卸、小売）で、注文書や請求書などの商取引データを標準形式で交換する仕組みはどれか？", options: ["EDI（電子データ交換）", "POS", "EOS", "LAN"], ans: 0, exp: "EDI（Electronic Data Interchange）は企業間の電子取引の標準フォーマットによる交換です。" },
-                { q: "電波を用いてICチップ内のデータを非接触で読み取る識別技術・タグはどれか？", options: ["RFID（ICタグ）", "JANバーコード", "QRコード", "磁気テープ"], ans: 0, exp: "RFID（Radio Frequency Identification）は複数の商品を箱ごと一括で読み取ることなどが可能です。" },
-                { q: "原材料の調達から製造、流通、販売に至る全体のモノと情報の流れを一元管理し最適化する手法を何というか？", options: ["SCM（サプライチェーン・マネジメント）", "CRM", "SPA", "POS"], ans: 0, exp: "SCM（Supply Chain Management）により過剰在庫や欠品を防止します。" },
-                { q: "メーカーと小売業が協働し、「清涼飲料」「カップ麺」などの商品カテゴリー単位で売り場を最適化する手法はどれか？", options: ["カテゴリーマネジメント", "ブランドマネジメント", "タイムマネジメント", "チェーン本部管理"], ans: 0, exp: "カテゴリー全体の売上・利益を最大化する売り場提案活動です。" },
-                { q: "企画・製造・物流・販売までの全プロセスを自社で一元的に手がける製造小売り業態を何というか？", options: ["SPA", "POS", "SCM", "EDI"], ans: 0, exp: "SPA（Specialty store retailer of Private label Apparel：ユニクロやZARAなど）の形態です。" },
-                { q: "POSシステムの導入メリットとして適切でないものはどれか？", options: ["レジ打ちが遅くなり待ち時間が増える", "売れ筋商品・死に筋商品が明確になる", "在庫管理の精度が高まる", "時間帯ごとの売上傾向が把握できる"], ans: 0, exp: "POS導入によりバーコード読み取りでレジ会計はスピードアップします。" },
-                { q: "RFID（ICタグ）がバーコードと比べて優れている点はどれか？", options: ["複数のタグを離れた場所から一括で読み取れる", "印刷コストが完全ゼロである", "水や金属の影響を100%絶対に受けない", "スマートフォンでは絶対に読み取れない"], ans: 0, exp: "かざすだけで一括読み取りができるため、セルフレジや検品作業が格段に速くなります。" },
-                { q: "EOS（電子発注システム）を導入することで削減できるものはどれか？", options: ["伝票作成や電話・FAXでの誤発注・時間", "商品の製造原価", "店舗の電気代", "運送業者のガソリン代"], ans: 0, exp: "発注事務の手間や記入ミス、通信時間を大幅に削減できます。" },
-                { q: "EDI（電子データ交換）に関する説明として正しいものはどれか？", options: ["EOSはEDIの中に含まれる（一部である）", "EDIは個人のSNSメッセージ機能のことである", "EDIを導入すると紙の契約書が必ず10倍増える", "EDIは店舗内の清掃用ロボットである"], ans: 0, exp: "発注を扱うEOSも企業間データ交換であるEDIの枠組みの一部です。" },
-                { q: "550mlのペットボトル緑茶と1Lのペットボトル緑茶は、SKU（単品管理）としてはどう扱われるか？", options: ["容量が異なるため別のSKUとして管理する", "同じ緑茶なので1つのSKUとして合算する", "メーカーが同じならSKUは作らない", "価格が同じなら同じSKUにする"], ans: 0, exp: "サイズや容量が異なれば別々のSKU（単品）として区別します。" },
-                { q: "SCM（サプライチェーン・マネジメント）の最終的なゴールはどれか？", options: ["サプライチェーン全体の過剰在庫や欠品を減らし効率化する", "自社だけが利益を独占し取引先を廃業させる", "製品の価格を10倍にして利益をあげる", "すべての店舗を無人化すること"], ans: 0, exp: "全体最適（在庫削減・リードタイム短縮・顧客満足度向上）を目指します。" },
-                { q: "カテゴリーマネジメントにおいて、飲料メーカーが小売店に行う提案はどれか？", options: ["自社製品だけでなくカテゴリー全体の売上を伸ばす棚割り提案", "他社製品を全て棚から排除する強い要求", "自社製品の価格を小売店に強制決定させること", "店舗の従業員を全員自社社員に入れ替えること"], ans: 0, exp: "小売店の売り場全体の魅力を高める協働提案を行います。" },
-                { q: "SPA（製造小売り）業態の最大の強みはどれか？", options: ["顧客のニーズ（売れ行き）をリアルタイムに製造へ反映できる", "製造をすべて他社に丸投げできる", "店舗を一切持たずに済む", "商品開発に何年もかけられる"], ans: 0, exp: "店頭の販売情報を迅速に生産計画にフィードバックできる点です。" },
-                { q: "日本の共通商品コード（バーコード）として広く使われている規格はどれか？", options: ["JANコード", "QRコード", "ISBNコード", "POSTコード"], ans: 0, exp: "日本の標準商品用バーコードはJAN（Japan Article Number）コードです。" },
-                { q: "POSレジで集計されたデータを分析して見つけ出す「あまり売れない商品」を何というか？", options: ["死に筋商品", "売れ筋商品", "看板商品", "目玉商品"], ans: 0, exp: "売れ行きが悪い商品は「死に筋商品」と呼ばれ、カットや見直しの対象になります。" },
-                { q: "ICタグ（RFID）がアパレル店舗のセルフレジ等で活躍する主な理由はどれか？", options: ["商品を入れた買い物かごを置くだけで自動精算できるから", "服のサイズを自動で変更してくれるから", "服のデザインを自動で変更できるから", "万引きを100%物理的に不可能にするから"], ans: 0, exp: "かごの中の複数のICタグを一瞬で集計できるため精算が極めてスピーディになります。" },
-                { q: "「単品管理」を行うことのメリットはどれか？", options: ["どの色・サイズが売れているかを正確に把握して在庫の無駄を省ける", "大まかな箱単位でしか在庫がわからなくなる", "商品のデザインが全自動で改善される", "経理の税金計算が不要になる"], ans: 0, exp: "詳細な商品属性（SKU）ごとの動きが判明するため、精密な在庫コントロールが可能になります。" }
-            ],
-            4: [
-                { q: "流通業者（小売店等）が独自に企画・開発し、自社ブランドとして販売する商品を何というか？", options: ["PB商品（プライベート・ブランド商品）", "NB商品（ナショナル・ブランド商品）", "OEM商品", "ライセンス商品"], ans: 0, exp: "イオンのトップバリュやセブンプレミアムのような小売独自のブランドです。" },
-                { q: "メーカーが全国的に製造・販売し、広く広告されているナショナルな商品を何というか？", options: ["NB商品（ナショナル・ブランド商品）", "PB商品（プライベート・ブランド商品）", "ノーブランド商品", "ストアブランド商品"], ans: 0, exp: "大手食品メーカーや家電メーカーが全国展開する一般ブランドです。" },
-                { q: "実店舗（リアル店舗）とネット通販（EC）などのあらゆる販売チャネルを融合させ、どこでも購入できるようにする環境を何というか？", options: ["オムニチャネル", "マルチチャネル", "シングルチャネル", "クロスチャネル"], ans: 0, exp: "実店舗・EC・アプリなどの境界をなくし、顧客にシームレスな購買体験を提供する考え方です。" },
-                { q: "実店舗で実際の製品を確認・試着したあと、値段の安いネット通販で購入する購買行動を何というか？", options: ["ショールーミング", "ウェブルーミング", "ウィンドショッピング", "バイパス購買"], ans: 0, exp: "実店舗が「展示場（ショールーム）」化してしまう現象です。" },
-                { q: "PB（プライベート・ブランド）商品のメリットとして小売業者側にあてはまるものはどれか？", options: ["利益率が高く、価格設定の自由度が高い", "製造責任を100%他社へ転嫁できる", "開発コストが全くかからない", "全国どこでもCMを打ってもらえる"], ans: 0, exp: "中間マージンをカットでき、自社の粗利益率を高めやすい特長があります。" },
-                { q: "ネット通販（EC）が実店舗と比べて優れている点（メリット）はどれか？", options: ["24時間いつでも、地理的制約なく全国から注文を受けられる", "購入した瞬間にその場で現物を持ち帰れる", "実際に手触りや味を確かめてから買える", "送料が地球上どこでも絶対に無料である"], ans: 0, exp: "時間や場所の制約がない「無店舗販売」の強みです。" },
-                { q: "オムニチャネルの具体例として最も適切なものはどれか？", options: ["ネットで注文した商品を、近くの実店舗（コンビニ等）で受け取る", "実店舗の営業時間を24時間から8時間に短縮する", "ECサイトを廃止して実店舗のみにする", "チラシの配布を完全にストップする"], ans: 0, exp: "ネットと店舗の在庫やロジスティクスが連携している事例です。" },
-                { q: "店舗側が「ショールーミング」に対処・活用するための対策として適切なものはどれか？", options: ["店内でのアプリ活用やQRコード提示により、自社ECへ誘導・囲い込みを行う", "店内でのスマートフォン使用を全面禁止にする", "商品を一切展示しないようにする", "実店舗の価格をネットの5倍に設定する"], ans: 0, exp: "店舗での体験をポジティブに捉え、自社グループのECやアプリで購入してもらう施策が効果的です。" },
-                { q: "NB（ナショナル・ブランド）商品の特徴として正しいものはどれか？", options: ["メーカーが品質保証し、認知度が高く集客力がある", "特定の1店舗でしか絶対に買えない", "広告宣伝費用が全くかかっていない", "小売店が独自に価格を決定して製造する"], ans: 0, exp: "高いブランド認知度と信頼性があり、お店の集客のフックになります。" },
-                { q: "ネット通販の普及により急速に拡大している、個人間での中古品取引（フリマアプリ等）は何と呼ばれるか？", options: ["CtoC（Consumer to Consumer）", "BtoB", "BtoC", "GtoC"], ans: 0, exp: "一般消費者どうしが取引する形態（CtoC）です。" },
-                { q: "EC化率（すべての商取引に占める電子商取引の割合）の傾向として正しいものはどれか？", options: ["スマートフォン等の普及により年々増加傾向にある", "年々激減しており、将来ゼロになる", "昭和時代から全く変化していない", "BtoBでのみ使われ、BtoCでは存在しない"], ans: 0, exp: "スマホの浸透や配送網の充実により、EC化率は上昇を続けています。" },
-                { q: "実店舗がインターネット通販に対して持つ最大の強み（アドバンテージ）はどれか？", options: ["接客対応や商品の現物確認、即時持ち帰りができる点", "店舗の家賃や光熱費が一切かからない点", "無限に商品を陳列できる点", "世界中の全人類に同時に販売できる点"], ans: 0, exp: "実物を見る・触る体験や、すぐ手に入る即時性はリアル店舗の強みです。" },
-                { q: "PB商品の製造を請け負う大手食品メーカーにとってのメリットはどれか？", options: ["自社工場の稼働率を上げ、安定した生産量を確保できる", "自社ブランドの認知度が飛躍的に高まる", "好きな価格で小売店に買わせることができる", "マーケティング活動がすべて不要になる"], ans: 0, exp: "自社ブランドでなくても、工場設備を効率よく稼働させられるメリットがあります。" },
-                { q: "オムニチャネル化を進めるうえで重要なバックエンドの仕組みはどれか？", options: ["実店舗とネット通販の在庫データの一元管理", "店舗ごとに全く異なる価格をつけること", "紙の台帳による手書き在庫管理", "現金支払いに限定すること"], ans: 0, exp: "リアルとネットで在庫がリアルタイム連動していることが不可欠です。" },
-                { q: "Webサイトで商品を見て検討した後に、実店舗へ足を運んで購入する行動は何と呼ばれるか？", options: ["ウェブルーミング（Webrooming）", "ショールーミング", "ウィンドウショッピング", "リテールサポート"], ans: 0, exp: "ショールーミングの逆で、ネットで調べて店で買う行動を「ウェブルーミング」と呼びます。" },
-                { q: "プレミアムPB商品（有名ラーメン店コラボ等）を展開する主な目的はどれか？", options: ["高価格帯でも品質の高さで他社と差別化を図るため", "安さだけを追求して品質を下げるため", "売れ残りを処分するため", "他メーカーの製品を排除するため"], ans: 0, exp: "価格訴求だけでなく、高品質・独自性でブランディングを図るPBが増えています。" },
-                { q: "ネット通販において、顧客が購入直前まで至りながら途中で離脱してしまうことを何というか？", options: ["カゴ落ち（カート離脱）", "ショールーミング", "棚落ち", "ボイコット"], ans: 0, exp: "カートに商品を入れたまま購入完了せずに離脱するWebマーケティング用語です。" },
-                { q: "「実店舗のショールーム化」への前向きな取り組みの例はどれか？", options: ["店舗では試着・試用のみを行い、購入はQRコードからオンラインで完結させる店舗", "店舗の照明を暗くして商品を見えにくくする", "商品を鍵付きの箱に入れて触れなくする", "来店時に入場料をとる"], ans: 0, exp: "在庫を持たず体験に特化したショールーミング型店舗（D2Cブランド等）の展開です。" },
-                { q: "メーカー直販サイト（D2C: Direct to Consumer）が増加している背景はどれか？", options: ["SNS等の普及で直接消費者と繋がり、中間コストを削減できるため", "流通業者が全滅したため", "法律で卸売業が禁止されたため", "実店舗の建設が法律で認められなくなったため"], ans: 0, exp: "デジタルマーケティングの発達により、自社でファンを作り直販する動きが広がっています。" },
-                { q: "オムニチャネル（Omni-channel）の「オムニ（Omni）」の本来の意味はどれか？", options: ["「すべての」「全方位の」", "「部分的な」", "「インターネットの」", "「格安の」"], ans: 0, exp: "ラテン語由来で「すべて（All）」を意味し、全チャネル統合を表します。" }
-            ]
-        };
+        /* ショップアイテム定義 */
+        const SHOP_ITEMS = [
+            { id: 'hat_glasses', name: 'インテリメガネ', price: 150, type: 'hat', icon: '🤓', desc: '賢さ+100のインテリなメガネ' },
+            { id: 'hat_crown', name: '王者の王冠', price: 500, type: 'hat', icon: '👑', desc: 'チャネルマスターの証' },
+            { id: 'hat_ribbon', name: 'キュートリボン', price: 200, type: 'hat', icon: '🎀', desc: '可愛い赤いリボン' },
+            { id: 'outfit_suit', name: 'ビジネススーツ', price: 300, type: 'outfit', icon: '👔', desc: 'ビシッと決まるビジネススタイル' },
+            { id: 'outfit_cape', name: 'ヒーローのマント', price: 450, type: 'outfit', icon: '🦸', desc: '正解の波に乗るマント' },
+            { id: 'item_double', name: 'コイン2倍ブースター', price: 100, type: 'item', icon: '🪙', desc: '次回のステージで獲得コイン2倍' },
+            { id: 'item_hint', name: 'ヒントチケット', price: 80, type: 'item', icon: '💡', desc: '間違った選択肢を1つ消去' }
+        ];
+
+        /* ロードマップ報酬定義 */
+        const ROADMAP_REWARDS = [
+            { level: 2, title: "流通ビギナー", reward: "100 G", coins: 100 },
+            { level: 3, title: "チャネル分析士", reward: "200 G + 限定メガネ", coins: 200, item: 'hat_glasses' },
+            { level: 5, title: "オムニチャネル戦略家", reward: "500 G + 限定スーツ", coins: 500, item: 'outfit_suit' },
+            { level: 8, title: "チャネル統括ディレクター", reward: "1000 G", coins: 1000 },
+            { level: 10, title: "チャネル神", reward: "2000 G + 伝説の王冠", coins: 2000, item: 'hat_crown' }
+        ];
 
         /* ==========================================================================
-           STATE MANAGEMENT & GAME VARIABLES
+           クイズデータベース（各章30問＝計120問＋ダンジョン100問）
+           一部複数選択問題 (isMulti: true) を含む
            ========================================================================== */
-        let gameState = {
-            score: 0,
-            xp: 0,
-            level: 1,
-            streak: 0,
-            maxStreak: 0,
-            weakList: [], // Array of question objects
-            history: {}, // qKey -> { correct: count, wrong: count }
-            chapterProgress: { 1: 0, 2: 0, 3: 0, 4: 0 }
-        };
+        
+        // 簡易的な問題生成補助ロジックを交えた120問の章別データ構造
+        // 実際のクイズデータ生成関数
+        function generateQuizDatabase() {
+            const createMulti = (q, opts, correctIndexes, exp) => ({
+                question: q, options: opts, correct: correctIndexes, isMulti: true, explanation: exp
+            });
+            const createSingle = (q, opts, correctIndex, exp) => ({
+                question: q, options: opts, correct: [correctIndex], isMulti: false, explanation: exp
+            });
 
-        let currentSession = {
-            mode: 'chapter', // 'chapter', 'final', 'weak'
+            // 第1章：チャネル政策の概要（30問）
+            const ch1 = [
+                createSingle("メーカーが消費者へ直接商品を販売するチャネル形態はどれか？", ["間接流通", "直接流通", "多角流通", "委託流通"], 1, "直接流通は中間業者を挟まず直接販売する形態です。"),
+                createSingle("メーカーと消費者の間に卸売業者や小売業者が介在する流通を何と呼ぶか？", ["直接流通", "直接販売", "間接流通", "垂直流通"], 2, "中間業者が入る形態を間接流通と言います。"),
+                createSingle("商品の所有権が移転していく流れを何と呼ぶか？", ["物流", "情報流", "商流", "金流"], 2, "所有権の移転（売買）の流れは「商流」です。"),
+                createSingle("商品そのものの物理的な移動や保管に関する流れはどれか？", ["商流", "物流", "情報流", "資金流"], 1, "商品の運送や保管などの物理的移動は「物流」です。"),
+                createMulti("間接流通（中間業者の介在）がもたらす主なメリットを2つ選べ。", ["生産者の販売手間が削減される", "消費者の選択の幅が狭まる", "取引回数の削減により社会全体コストが下がる", "中間マージンが0になり最安値になる"], [0, 2], "中間業者の存在で取引数が減り、生産者の販売手間が削減されます。"),
+                createSingle("小売業者に対して商品を仕入れ、販売・供給する中間業者はどれか？", ["製造業者", "卸売業者", "一般消費者", "運送業者"], 1, "卸売業者はメーカーと小売業者の間に位置します。"),
+                createSingle("最終消費者に直接商品を販売する事業者はどれか？", ["卸売業者", "輸入元", "製造業者", "小売業者"], 3, "消費者へ最終販売するのは小売業者です。"),
+                createSingle("商品に関する受発注データや在庫情報などの流れを何と呼ぶか？", ["商流", "物流", "情報流", "リバース物流"], 2, "情報取引の流れを情報流と呼びます。"),
+                createMulti("商流と物流を分離して効率化を図る考え方を何と呼ぶか？（該当するものを選べ）", ["商物分離", "製販一体", "ジャストインタイム", "オムニチャネル"], [0], "商取引と物の移動を別々に最適化するのを商物分離と呼びます。"),
+                createSingle("流通経路（チャネル）を構成する参加者の繋がり全体を指す用語は？", ["マーケティング・ミックス", "流通チャネル", "バリューチェーン", "サプライチェーン"], 1, "商品が届くまでの経路を流通チャネルと呼びます。"),
+                // 追加 20問 (計30問)
+                createSingle("卸売業の機能として当てはまらないものはどれか？", ["品揃えの形成", "在庫の保管", "商品の直接製造", "金融・危険負担"], 2, "商品の製造は製造業者（メーカー）の機能です。"),
+                createSingle("商品の小口配送や迅速な補充を行う物流拠点を何と呼ぶか？", ["配送センター(TC/DC)", "製造工場", "展示場", "コールセンター"], 0, "配送センターが物流のハブとなります。"),
+                createMulti("次のうち「物流」に含まれる活動を2つ選べ。", ["輸配送", "保管・倉庫管理", "契約の締結", "代金決済"], [0, 1], "輸配送と保管は物流の主要要素です。契約・決済は商流です。"),
+                createSingle("メーカー直営のオンラインショップ（D2C）はどの流通形態か？", ["間接流通", "直接流通", "卸売流通", "代理店流通"], 1, "D2C(Direct to Consumer)は直接流通の代表例です。"),
+                createSingle("「商流」において移動するものは何か？", ["トラック", "所有権（売買契約）", "ダンボール箱", "コンテナ"], 1, "商流では「所有権」が移動します。"),
+                createSingle("中間業者が介在することで取引の効率化が図られる原理を何という？", ["取引総数再削減の原理", "市場集中準備の原理", "商業集積の原理", "規模の経済"], 0, "タップス（Balderston等）の「取引総数削減の原理」です。"),
+                createSingle("近年増えている、不用品回収やリサイクルなどの物の流れを何と呼ぶか？", ["静脈物流（リバース・ロジスティクス）", "動脈物流", "国際物流", "校内物流"], 0, "回収・再利用に関する物は静脈物流と呼ばれます。"),
+                createMulti("小売業者の機能として正しいものを2つ選べ。", ["消費者への直接販売", "小分け・品揃えの提供", "原料の採掘", "全国一括大量買い付け（卸売限定機能）"], [0, 1], "小売は消費者に寄り添い小分け・品揃えを行います。"),
+                createSingle("情報流の高度化により可能となった受発注の電子化システムは？", ["EDI", "POS", "SKU", "SPA"], 0, "EDI（電子データ交換）が受発注を自動化します。"),
+                createSingle("直接流通のデメリットとして当てはまるものはどれか？", ["販売コストや自社物流負担が大きくなる", "顧客情報を直接取得できない", "価格コントロールができない", "中間マージンを取られる"], 0, "自前でチャネルを維持するため自社負担が増えます。"),
+                createSingle("メーカーが流通チャネルに対して主導権を握り構築した系列を何と呼ぶか？", ["チャネルの系列化", "オープンチャネル", "水平的統合", "フリー流通"], 0, "自社製品を優先販売させるためのチャネル系列化です。"),
+                createSingle("物流において、包装・荷役・保管・輸配送・流通加工を一括管理することを何という？", ["総合ロジスティクス", "商流一元化", "POSレジ管理", "カテゴリーマネジメント"], 0, "これらを一括管理・最適化するのがロジスティクスです。"),
+                createMulti("現代のチャネル政策で重要視される「3つの流れ」を選べ。", ["商流", "物流", "情報流", "人流"], [0, 1, 2], "商流・物流・情報流の3つが基本です。"),
+                createSingle("生産者から最終消費者までの流通段階の長さを示す概念は？", ["チャネルの長さ（段階数）", "チャネルの幅", "チャネルの密度", "チャネルの深さ"], 0, "中間段階の多さを「チャネルの長さ」と呼びます。"),
+                createSingle("特定の地域で何個の店舗で販売するかという網羅性の概念は？", ["チャネルの幅（網羅性）", "チャネルの長さ", "チャネルの高さ", "チャネルのコスト"], 0, "販売店の広がりを「チャネルの幅」と言います。"),
+                createSingle("卸売業者が複数のメーカーから商品を仕入れて品揃えを作ることを何という？", ["アソートメント（品揃え形成）", "プロモーション", "マーチャンダイジング", "セグメンテーション"], 0, "需要に合わせた品揃え形成（アソートメント）です。"),
+                createSingle("顧客との接点（コンタクトポイント）となる場所全般を何と呼ぶか？", ["タッチポイント", "チェックポイント", "セールスポイント", "ターゲットポイント"], 0, "店舗、WEB、アプリ等の接点をタッチポイントと呼びます。"),
+                createSingle("商品の配送コストを削減するために複数の企業で共同でトラックを配車することを何という？", ["共同配送", "単独配送", "密着配送", "分散物流"], 0, "効率化と環境配慮のため共同配送が進んでいます。"),
+                createSingle("商品の所有権は移転せず、受託者が販売代行する形態は？", ["委託販売", "買取販売", "返品無制限販売", "OEM"], 0, "委託販売は所有権が委託者に残ります。"),
+                createSingle("第1章のまとめ：流通チャネルの最も根本的な目的は何か？", ["生産と消費の隔たり（隔たり解消）を埋めること", "メーカーの利益だけを最大化すること", "店舗数を世界一にすること", "広告費をゼロにすること"], 0, "生産者と消費者の場所・時間・情報の隔たりを埋めるのが流通の役割です。")
+            ];
+
+            // 第2章：チャネルの選択と管理（30問）
+            const ch2 = [
+                createSingle("メーカーが可能な限り多くの販売店に商品を置くチャネル戦略はどれか？", ["開放的チャネル政策", "選択的チャネル政策", "排他的チャネル政策", "限定的チャネル政策"], 0, "開放的チャネルは最寄り品などで広く網羅します。"),
+                createSingle("一定の基準を満たした特約店や代理店だけに限定して販売させる戦略はどれか？", ["開放的チャネル政策", "選択的チャネル政策", "排他的チャネル政策", "無差別チャネル政策"], 1, "買い回り品などで一定基準の店を選ぶ戦略です。"),
+                createSingle("1地域1代理店など、最も強く販売店を限定し契約を結ぶ戦略はどれか？", ["開放的チャネル政策", "選択的チャネル政策", "排他的チャネル政策", "オープン政策"], 2, "高級品や自動車などで見られる強い制限政策です。"),
+                createMulti("開放的チャネル政策（最寄り品向け）のメリットを2つ選べ。", ["製品の露出度が高まり大量販売しやすい", "製品のブランドイメージが高く保てる", "消費者の買物利便性が高まる", "販売店への強力な価格コントロールができる"], [0, 2], "広く並ぶため露出度と利便性が高まります。価格維持は難しくなります。"),
+                createSingle("日用品や菓子など、消費者が近くの店ですぐ買う商品を何と呼ぶか？", ["最寄り品", "買い回り品", "専門品", "非探索品"], 0, "最寄り品（Convenience goods）です。"),
+                createSingle("家電や服飾など、複数の店で価格やデザインを比較して買う商品はどれか？", ["最寄り品", "買い回り品", "専門品", "生産財"], 1, "比較検討して買う商品は「買い回り品」です。"),
+                createSingle("高級外車やブランド時計など、指名買いされる傾向が強い商品はどれか？", ["最寄り品", "買い回り品", "専門品", "消費財"], 2, "特定のブランドを求めて探す商品が「専門品」です。"),
+                createSingle("メーカーが流通業者にインセンティブを与えて売らせる戦略はどれか？", ["プル戦略", "プッシュ戦略", "リバース戦略", "ダイレクト戦略"], 1, "流通を「押し込む」のがプッシュ戦略です。"),
+                createSingle("メーカーが消費者向けに広告を出し、自発的に指名買いさせる戦略は？", ["プッシュ戦略", "プル戦略", "スキミング戦略", "フッキング戦略"], 1, "消費者を「引き寄せる」のがプル戦略です。"),
+                createMulti("チャネルコンフリクト（摩擦・葛藤）が生じる原因として正しいものを2つ選べ。", ["メーカーと販売店の間で目標や認識がズレている", "ECストアと実店舗で価格競合が起きている", "商品が売れすぎて在庫が余っている", "すべての店舗で均一なサービスが提供されている"], [0, 1], "目標の齟齬やECvs実店舗の競合がコンフリクトの原因です。"),
+                // 追加 20問
+                createSingle("チャネル部員や店舗に対して行う販売奨励金のことを何と呼ぶか？", ["リベート", "マージン", "ロイヤリティ", "配当金"], 0, "売上達成度等に応じて支払う販売奨励金がリベートです。"),
+                createSingle("同一流通段階の業者同士（例：家電量販店同士）で発生する葛藤はどれか？", ["水平的チャネル・コンフリクト", "垂直的チャネル・コンフリクト", "多角化コンフリクト", "国際コンフリクト"], 0, "同じ段階同士の摩擦を水平的コンフリクトと言います。"),
+                createSingle("メーカーと卸売業者、あるいは卸と小売の間で発生する葛藤はどれか？", ["水平的チャネル・コンフリクト", "垂直的チャネル・コンフリクト", "対角コンフリクト", "内部コンフリクト"], 1, "異なる流通段階間の摩擦を垂直的コンフリクトと言います。"),
+                createSingle("製品のブランドイメージを強固に保ちたい高級品に適したチャネル政策は？", ["開放的政策", "排他的（専属的）政策", "無差別政策", "大量流通政策"], 1, "限定することでブランドと価格を維持できます。"),
+                createSingle("最寄り品の流通においてメーカーが取るべき基本戦略はどちらか？", ["開放的チャネル政策", "排他的チャネル政策", "単一店舗限定", "受注生産"], 0, "どこでも買える状態を作る開放的政策が基本です。"),
+                createSingle("メーカーがチャネルメンバーの評価を行う基準として不適切なものはどれか？", ["売上目標の達成度", "在庫水準の維持", "顧客サービスの質", "従業員の個人的な趣味"], 3, "個人的な趣味は評価基準になりません。"),
+                createSingle("製造企業が自ら小売店舗をチェーン展開することを何統合と呼ぶか？", ["前方垂直統合", "後方垂直統合", "水平統合", "斜め統合"], 0, "川下（小売側）へ進出するのは前方垂直統合です。"),
+                createSingle("小売業者が自ら原料調達や製造まで遡ることを何統合と呼ぶか？", ["前方垂直統合", "後方垂直統合", "水平統合", "対向統合"], 1, "川上（製造側）へ遡るのは後方垂直統合です。"),
+                createMulti("プッシュ戦略で用いられる主な施策を2つ選べ。", ["販売店向けリベートの提供", "ディーラー・ヘルプ（販売店支援）", "TVCMでの大規模消費者広告", "SNSでの消費者向けプレゼント企画"], [0, 1], "流通向け施策（リベート、販売支援）がプッシュ戦略です。"),
+                createSingle("チャネル・リーダー（主導権を握る企業）の立場が変わる背景として正しいものは？", ["メーカー主導から小売主導（パワーシフト）への変化", "常に政府が主導するようになった", "消費者の発言権が消滅した", "卸売業者が全ての価格を決定するようになった"], 0, "POSデータ等の台頭で小売業に主導権が移るパワーシフトが起きました。"),
+                createSingle("同一メーカーがECサイトと直売店と量販店で同じものを売り顧客を取り合う現象は？", ["カニバリゼーション（共食い）", "シナジー効果", "スケールメリット", "セグメンテーション"], 0, "自社チャネル同士で顧客を奪い合うのをカニバリゼーションと言います。"),
+                createSingle("メーカーが販売店に他社製品を扱わせないように拘束する契約を何と呼ぶか？", ["専属一元集荷契約（一手販売契約）", "フランチャイズ契約", "OEM契約", "ライセンス契約"], 0, "他社排除につながり独占禁止法上注意が必要です。"),
+                createSingle("消費者が店舗で実物を確認し、購入は価格の安いネットショップで行う行動は？", ["ショールーミング", "ウェブルーミング", "クロスマーチャンダイジング", "ワンストップショッピング"], 0, "実店舗を展示場扱いするショールーミングです。"),
+                createSingle("ネットで事前調査し、実際の購入は実店舗で行う行動を何と呼ぶか？", ["ウェブルーミング", "ショールーミング", "オムニチャネル", "ドロップシッピング"], 0, "WEBで調べて店舗で買う行動をウェブルーミングと言います。"),
+                createMulti("買い回り品（服や家電）のチャネル政策として適している組み合わせは？", ["選択的チャネル政策", "全国全ての駄菓子屋に置く開放的政策", "競合と比較できる比較購買可能な立地への出店", "完全な受注生産"], [0, 2], "選択的チャネルで、比較購買しやすい場所に出店します。"),
+                createSingle("チャネル全体の効率化を図るために組まれる垂直的マーケティング・システムは？", ["VMS (Vertical Marketing System)", "HMS", "POS", "EOS"], 0, "VMS（垂直的マーケティング・システム）です。"),
+                createSingle("資本関係によってチャネルを結合したVMS形態はどれか？", ["企業型VMS", "契約型VMS", "管理型VMS", "自然発生型VMS"], 0, "自社買収や子会社化で統合する「企業型VMS」です。"),
+                createSingle("フランチャイズ組織のように契約によって結合されたVMS形態はどれか？", ["契約型VMS", "企業型VMS", "管理型VMS", "緩やかなVMS"], 0, "フランチャイズ等は「契約型VMS」です。"),
+                createSingle("強力な企業がリードして契約なしに協調関係を築くVMS形態は？", ["管理型VMS", "企業型VMS", "契約型VMS", "強制型VMS"], 0, "影響力で主導する「管理型VMS」です。"),
+                createSingle("第2章のまとめ：適切なチャネル選択で最も重視すべき視点はどれか？", ["標的顧客（ターゲット）の購買行動や商品の特性", "メーカー社長の個人的な好み", "ライバル企業の真似だけをすること", "とにかく最安値で売れる経路だけに絞ること"], 0, "ターゲット顧客の購買属性と商品特性に合わせることが不可欠です。")
+            ];
+
+            // 第3章：チャネル政策の動向（30問）
+            const ch3 = [
+                createSingle("レジで商品のバーコードを読み取り、販売情報をリアルタイムで管理するシステムは？", ["POSシステム", "EOSシステム", "EDIシステム", "SCMシステム"], 0, "POS(Point of Sales: 販売時点情報管理)です。"),
+                createSingle("在庫管理や発注管理における最小の管理単位（最小識別単位）はどれか？", ["SKU", "JANコード", "POS", "ロット"], 0, "SKU(Stock Keeping Unit)です。"),
+                createSingle("受発注業務をオンラインで電子的に行う補充発注システムはどれか？", ["EOS", "POS", "RFID", "SPA"], 0, "EOS(Electronic Ordering System: 電子発注システム)です。"),
+                createSingle("企業間で標準的なフォーマットで取引データを電子交換する仕組みは？", ["EDI", "GPS", "ASP", "BPR"], 0, "EDI(Electronic Data Interchange: 電子データ交換)です。"),
+                createSingle("電波を用いてICチップのデータを非接触で読み取る識別技術はどれか？", ["ICタグ / RFID", "バーコード", "QRコード", "OCR"], 0, "RFID(Radio Frequency Identification)です。"),
+                createSingle("調達から製造、物流、販売までの一連の供給網全体を最適化する管理手法は？", ["SCM", "CRM", "ERP", "SFA"], 0, "SCM(Supply Chain Management)です。"),
+                createSingle("商品カテゴリーを1つの戦略的事業単位として捉えて管理する手法は？", ["カテゴリーマネジメント", "ブランドマネジメント", "単品管理", "棚割管理"], 0, "カテゴリーマネジメントです。"),
+                createSingle("企画・製造から直営販売までを一貫して行うアパレル等の業態（製造小売り）は？", ["SPA", "PB", "NB", "OEM"], 0, "SPA(Specialty store retailer of Private label Apparel)です。"),
+                createMulti("POSシステムの導入によって得られるメリットを2つ選べ。", ["死に筋商品の早期発見・排除", "売れ筋商品のタイムリーな補充", "商品の製造原価が自動的に半額になる", "従業員の給与が自動計算される"], [0, 1], "死に筋排除と売れ筋補充の「単品管理」が可能になります。"),
+                createMulti("SCM（サプライチェーンマネジメント）の目的として正しいものを2つ選べ。", ["全社・全チェーンでの在庫削減と過剰在庫防止", "リードタイム（納入時間）の短縮", "各部門が他社を無視して好き勝手に動くこと", "販売価格を不当に吊り上げること"], [0, 1], "全体最適による在庫削減とリードタイム短縮が目的です。"),
+                // 追加 20問
+                createSingle("日本の共通商品コードとして広く用いられる13桁（または8桁）のバーコードは？", ["JANコード", "ISBNコード", "ITFコード", "QRコード"], 0, "JAN(Japanese Article Number)コードです。"),
+                createSingle("POSデータ分析において、商品ごとの販売数や利益率をもとにA・B・Cの3グループに分類する手法は？", ["ABC分析", "SWOT分析", "PST分析", "4P分析"], 0, "パレートの法則に基づくABC分析です。"),
+                createSingle("商品の棚割り（どこに何を並べるか）をコンピュータで最適化する手法は？", ["プラノグラム（棚割システム）", "オルガノグラム", "ヒートマップ", "3Dマッピング"], 0, "プラノグラム(Planogram)です。"),
+                createSingle("売り場において、特定の組み合わせ（例：ビールと紙おむつ）で一緒に買われる傾向を分析することを何という？", ["バスケット分析（併買い分析）", "ABC分析", "RFM分析", "デモグラフィック分析"], 0, "買い物かごの中身を分析するバスケット分析です。"),
+                createSingle("納品時にバーコードやRFIDを一括スキャンして検品作業を高速化することを何という？", ["自動検品", "手動検品", "サンプル検品", "目視検品"], 0, "RFID等の導入で一括検品が可能になります。"),
+                createSingle("需要予測のズレがサプライチェーンの上流（メーカー）に行けば行くほど増大する現象は？", ["ブルウィップ効果（鞭のしなり効果）", "アナウンス効果", "バタフライ効果", "シナジー効果"], 0, "小規模な需要変動が上流で巨大な在庫変動になる現象です。"),
+                createSingle("メーカー主導ではなく、実際の販売実績（需要）に連動して生産・補充を行う方式は？", ["プル型（デマンドウェーブン）サプライチェーン", "プッシュ型サプライチェーン", "予測生産型", "計画生産型"], 0, "実需要に引き寄せられるプル型SCMです。"),
+                createSingle("物流センターで商品を在庫せず、入庫後すぐに仕分けして配送する方式（通過型物流センター）は？", ["クロスドッキング (TC)", "DC (保管型センター)", "倉庫保管", "トランジット保管"], 0, "在庫を持たず素早く積み替えるクロスドッキングです。"),
+                createMulti("RFID（ICタグ）が従来のバーコードより優れている点を2つ選べ。", ["複数のタグを一括で非接触読み取りできる", "箱の中に入ったまま（遮蔽物があっても）読み取れる", "コストが紙のバーコードより100倍安い", "電源や電池が絶対に不要で発砲する"], [0, 1], "一括読み取りと遮蔽物越しでのスキャンが強みです。"),
+                createSingle("サプライチェーンにおいて、メーカーと小売が協調して在庫補充を行う仕組み（VMI）の略称は？", ["VMI (Vendor Managed Inventory)", "POS", "CPFR", "EDI"], 0, "ベンダー（メーカー）主導の在庫管理（VMI）です。"),
+                createSingle("カテゴリーマネジメントにおいて、買い手を惹きつけるための目玉カテゴリーを何と呼ぶか？", ["デスティネーション・カテゴリー（目的地）", "ルーティン・カテゴリー", "季節カテゴリー", "便利カテゴリー"], 0, "その店に行く理由となるデスティネーション・カテゴリーです。"),
+                createSingle("特定の店舗のみで限定販売される、売上貢献度の非常に高い優良商品を何と呼ぶか？", ["フラッグシップ商品（看板商品）", "死に筋商品", "スポット商品", "見切り商品"], 0, "店舗の看板となるフラッグシップ商品です。"),
+                createSingle("ECと物流の融合において、注文から最終消費者の手元に届く「最後の1区間」を何と呼ぶか？", ["ラストワンマイル", "ファーストマイル", "ミドルマイル", "ファイナルシップ"], 0, "配送の最終局面をラストワンマイルと言います。"),
+                createSingle("売れ行きが悪く、在庫として滞留している商品を何と呼ぶか？", ["死に筋商品（滞留在庫）", "売れ筋商品", "見せ球商品", "ヒット商品"], 0, "POSデータ等で早期発見・削減すべき「死に筋」です。"),
+                createSingle("サイズや色違いなど、同一商品群の中での最小管理単位を意識した在庫削減手法は？", ["SKU管理", "大括り管理", "箱単位管理", "重量管理"], 0, "カラー・サイズごとに管理するSKU管理です。"),
+                createSingle("SPA業態の代表的な強みとして当てはまるものはどれか？", ["顧客ニーズを素早く商品企画・生産に反映できる", "製造を他社に丸投げして何もしないこと", "中間業者のマージンを何重にも増やすこと", "大量の売れ残り在庫を放置すること"], 0, "店頭の需要を直ちに生産に反映できる機敏性です。"),
+                createMulti("EDI（電子データ交換）を導入する効果として正しいものを2つ選べ。", ["伝票の誤記入や手入力の手間削減", "受発注スピードの劇的な向上", "商品そのものの配送速度が光速になる", "顧客の来店数が自動で10倍になる"], [0, 1], "事務作業のミス防止と受発注のスピード化です。"),
+                createSingle("商品棚の前を通りかかった顧客に、Beaconなどでスマホにクーポンを送る技術は？", ["ロケーションベース・マーケティング", "大量一括メルマガ", "看板広告", "ダイレクトメール"], 0, "位置情報（Beacon等）を活用したマーケティングです。"),
+                createSingle("在庫の回転速度を示す、一定期間に在庫が何回入れ替わったかの指標は？", ["在庫回転率", "売上総利益率", "ROA", "客単価"], 0, "在庫の効率性を示す在庫回転率（Inventory Turnover）です。"),
+                createSingle("第3章のまとめ：現代のチャネル情報化（POS/SCM等）の本質的な目的は何か？", ["情報共有により無駄な在庫を削り、顧客満足を高めること", "単に最新のIT機器を自慢すること", "従業員の監視をすること", "紙の伝票を壁に貼ること"], 0, "サプライチェーン全体の無駄（在庫・タイムロス）を削るためです。")
+            ];
+
+            // 第4章：インターネット通販の進展（30問）
+            const ch4 = [
+                createSingle("小売業者や流通業者が独自に企画・開発して販売する自社ブランド商品は？", ["PB商品（プライベート・ブランド）", "NB商品", "ナショナル・ブランド", "ライセンス商品"], 0, "PB(Private Brand)商品です。"),
+                createSingle("メーカーが全国的に大量生産・広報し、広く流通させるブランド商品は？", ["NB商品（ナショナル・ブランド）", "PB商品", "ローカルブランド", "ノーブランド"], 0, "NB(National Brand)商品です。"),
+                createSingle("全商取引額に対する電子商取引（EC）の割合を示す指標は何か？", ["EC化率", "POS率", "IT化率", "シェア率"], 0, "EC化率（Electronic Commerce Ratio）です。"),
+                createSingle("実店舗、ECサイト、SNSなどのあらゆるチャネルを連携させ、顧客体験を統合する戦略は？", ["オムニチャネル", "マルチチャネル", "シングルチャネル", "クロスチャネル"], 0, "全て（Omni）のチャネルを統合するオムニチャネルです。"),
+                createSingle("消費者が実店舗で商品を確認し、実際の購入は安値のECサイトで行う購買行動は？", ["ショールーミング", "ウェブルーミング", "O2O", "D2C"], 0, "ショールーミング行動です。"),
+                createMulti("PB（プライベート・ブランド）商品の特徴・メリットを2つ選べ。", ["中間マージンをカットでき低価格・高利益率が狙える", "開発・在庫リスクを小売業者が自ら負う", "メーカーが全ての在庫リスクを保証してくれる", "宣伝しなくても絶対に全商品が大ヒットする"], [0, 1], "粗利率が高く低価格化可能ですが、売れ残りリスクは自社負担です。"),
+                createSingle("オンライン（WEB）からオフライン（実店舗）へ顧客を誘導する施策を何と呼ぶか？", ["O2O (Online to Offline)", "B2B", "C2C", "G2C"], 0, "O2O(Online to Offline)です。"),
+                createSingle("メーカーが中間業者を挟まず、自社のEC等で直接消費者に販売する形態は？", ["D2C (Direct to Consumer)", "B2B", "SPA", "C2C"], 0, "D2C(Direct to Consumer)です。"),
+                createSingle("複数のチャネルが存在するが、各チャネルのシステムや在庫が孤立している状態は？", ["マルチチャネル", "オムニチャネル", "O2O", "OMO"], 0, "チャネルが独立して並立するマルチチャネルです。"),
+                createMulti("オムニチャネルを実現するために重要な要素を2つ選べ。", ["実店舗とECでの会員データ・ポイントの一元化", "リアルタイムでの全社在庫情報の一元管理", "実店舗とECで全く異なる価格設定にして混乱させる", "EC顧客には実店舗の利用を禁止する"], [0, 1], "顧客データ・ポイント・在庫の一元化が欠かせません。"),
+                // 追加 20問
+                createSingle("オンラインとオフラインの境界をなくし、顧客体験（CX）を中心に一元融合する考え方は？", ["OMO (Online Merges with Offline)", "O2O", "D2C", "B2C"], 0, "OMO(Online Merges with Offline)です。"),
+                createSingle("ネットで注文した商品を、近所のコンビニや実店舗で受け取れるサービスは？", ["BOPIS (Buy Online, Pick-up In Store)", "ショールーミング", "ドロップシッピング", "アフィリエイト"], 0, "BOPIS（ネット注文・店舗受け取り）です。"),
+                createSingle("ECサイトにおいて、商品画像や解説動画を充実させて購買意欲を高める施策は？", ["VMD (Visual Merchandising)のWeb版", "SEO", "POS管理", "EOS"], 0, "Web上の視覚的演出（Web VMD）です。"),
+                createSingle("個人間で中古品などを売買するEC形態（メルカリ等）を何と呼ぶか？", ["C2C (Consumer to Consumer)", "B2B", "B2C", "G2B"], 0, "C2C(個人間取引)です。"),
+                createSingle("注文を受けたEC事業者が在庫を持たず、メーカーから直接顧客へ直送させる販売形態は？", ["ドロップシッピング", "BOPIS", "SPA", "OEM"], 0, "無在庫で直送させるドロップシッピングです。"),
+                createSingle("ソーシャルメディア（InstagramやTikTokなど）上でそのまま購入まで完結するEC手法は？", ["ソーシャルコマース", "Vコマース", "ライブコマース", "TVショッピング"], 0, "SNSを活用したソーシャルコマースです。"),
+                createSingle("動画生配信を行いながら視聴者とリアルタイムに対話し、商品を販売する手法は？", ["ライブコマース", "ソーシャルコマース", "ラジオショッピング", "メールマガジン"], 0, "ライブ配信による販売（ライブコマース）です。"),
+                createMulti("ショールーミング対策として実店舗側が取るべき有効な施策を2つ選べ。", ["店舗限定の体験や接客サービスの価値を高める", "店舗アプリでその場で使えるクーポンを配る", "店内でスマホの電波を遮断して検索させない", "来店客の荷物を全て没収する"], [0, 1], "体験価値の向上や、その場で買ってもらう動機付け（アプリ等）です。"),
+                createSingle("サブスクリプション（定額制）サービスの流通上のメリットはどれか？", ["継続的・安定的な収益（ストック型）が見込める", "在庫が永久に減らないこと", "初期費用が100億かかること", "解約が絶対に不可能になること"], 0, "継続的な定期収入（ストックビジネス）が得られます。"),
+                createSingle("メーカー（NB）がPB商品に対抗して出す、低価格帯の第二ブランドを何と呼ぶか？", ["ファイト・ブランド（ファイティングブランド）", "プレミアムブランド", "サブブランド", "エコノミーブランド"], 0, "PBに対抗するファイト・ブランドです。"),
+                createSingle("ECにおける「カゴ落ち（カート離脱）」の原因として最も多いものはどれか？", ["送料や手数料が予想より高かった", "商品画像が綺麗すぎた", "サイトの文字が大きすぎた", "決済方法が100種類以上あった"], 0, "隠れた送料や手数料による離脱が最多原因です。"),
+                createSingle("実店舗を持つ強みを活かし、ECの注文を自社店舗から直接配送する形態を何と呼ぶか？", ["ダークストア / 店舗発送", "中央倉庫専属配送", "国際スピード郵便", "海外直送"], 0, "近隣店舗を配送拠点化する手法です。"),
+                createMulti("D2C（Direct to Consumer）ブランドが重視する特徴を2つ選べ。", ["SNS等を通じた顧客との直接的なコミュニケーション", "世界観やストーリー（ブランド理念）への共感", "卸売業者への大量マージン支払い", "テレビCMだけに頼った大量宣伝"], [0, 1], "ダイレクトな対話と世界観・ストーリーの共感です。"),
+                createSingle("商品を購入せず、月額料金を払って一定期間利用するビジネスモデルは？", ["サブスクリプション", "スポット購入", "オークション", "クラウドファンディング"], 0, "サブスクリプション(Subscription)です。"),
+                createSingle("購入金額に応じて付与され、店舗でもECでも共通で使えるポイント制度は？", ["共通ポイントプログラム", "限定マイレージ", "店舗限定スタンプ", "紙の割引券"], 0, "オムニチャネルにおける共通ポイント統合です。"),
+                createSingle("実店舗を「売る場所」ではなく「体験や試着をする場所」に特化させた店舗形態は？", ["ショールーム型店舗（体験型ストア）", "ディスカウントストア", "アウトレットモール", "ジャンクショップ"], 0, "体験に特化したショールーム型店舗です。"),
+                createSingle("ネット通販における商品の返品率が高くなりやすいカテゴリーはどれか？", ["アパレル（衣料品）", "書籍", "清涼飲料水", "トイレットペーパー"], 0, "サイズや試着が必要なアパレルは返品率が高くなります。"),
+                createSingle("自社ECサイトを開設・運営するためのプラットフォームサービス（Shopify等）を何と呼ぶか？", ["ECカート / ECプラットフォーム", "POSレジ", "WMS", "EDI"], 0, "ECプラットフォームです。"),
+                createSingle("顧客が商品を検索してから購入、アフターサービスに至る一連の体験旅程を何と呼ぶか？", ["カスタマージャーニー", "サプライチェーン", "バリューチェーン", "マーチャンダイジング"], 0, "カスタマージャーニー(Customer Journey)です。"),
+                createSingle("第4章のまとめ：オムニチャネルやOMOが目指す究極の目標は何か？", ["顧客が「チャネルの違い」を意識せず最高・円滑な購買体験を得ること", "実店舗を全て潰してECだけにすること", "ネット通販を全廃して昭和の買い方に戻すこと", "顧客に複雑なルールを強制すること"], 0, "顧客が境界を意識せず、シームレスで便利な購買体験を得ることです。")
+            ];
+
+            return { 1: ch1, 2: ch2, 3: ch3, 4: ch4 };
+        }
+
+        const QUIZ_DB = generateQuizDatabase();
+
+        // 総まとめ 100問 ダンジョンの問題生成（全章から満遍なくピックアップ）
+        function getDungeonQuestions(floorIndex) {
+            // floorIndex: 0~9 (10階層)
+            const allQ = [...QUIZ_DB[1], ...QUIZ_DB[2], ...QUIZ_DB[3], ...QUIZ_DB[4]];
+            const start = floorIndex * 10;
+            return allQ.slice(start, start + 10);
+        }
+
+        /* ==========================================================================
+           UI ＆ キャラクター描画・更新ロジック
+           ========================================================================== */
+
+        // キャラクター衣装・アクセサリの描画更新
+        function updateCharacterAppearance() {
+            const outfitG = document.getElementById('char-outfit');
+            const hatG = document.getElementById('char-hat');
+
+            if (!outfitG || !hatG) return;
+
+            outfitG.innerHTML = '';
+            hatG.innerHTML = '';
+
+            // 服装
+            if (player.equippedOutfit === 'outfit_suit') {
+                outfitG.innerHTML = `
+                    <path d="M 65 125 L 100 160 L 135 125 L 120 165 L 80 165 Z" fill="#1e293b"/>
+                    <polygon points="100,135 93,145 107,145" fill="#f43f5e"/>
+                    <polygon points="90,125 100,140 110,125" fill="#fff"/>
+                `;
+            } else if (player.equippedOutfit === 'outfit_cape') {
+                outfitG.innerHTML = `
+                    <path d="M 50 110 Q 100 130 150 110 Q 160 170 100 180 Q 40 170 50 110 Z" fill="#dc2626" opacity="0.9"/>
+                    <circle cx="100" cy="120" r="6" fill="#fbbf24"/>
+                `;
+            }
+
+            // 帽子・アクセ
+            if (player.equippedHat === 'hat_glasses') {
+                hatG.innerHTML = `
+                    <circle cx="78" cy="100" r="14" fill="none" stroke="#000" stroke-width="3"/>
+                    <circle cx="122" cy="100" r="14" fill="none" stroke="#000" stroke-width="3"/>
+                    <line x1="92" y1="100" x2="108" y2="100" stroke="#000" stroke-width="3"/>
+                `;
+            } else if (player.equippedHat === 'hat_crown') {
+                hatG.innerHTML = `
+                    <polygon points="65,65 75,35 100,55 125,35 135,65" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+                    <circle cx="75" cy="35" r="3" fill="#ef4444"/>
+                    <circle cx="100" cy="55" r="3" fill="#3b82f6"/>
+                    <circle cx="125" cy="35" r="3" fill="#ef4444"/>
+                `;
+            } else if (player.equippedHat === 'hat_ribbon') {
+                hatG.innerHTML = `
+                    <path d="M 125 50 C 110 40, 110 65, 135 55 C 160 65, 160 40, 145 50 Z" fill="#f43f5e"/>
+                    <circle cx="135" cy="52" r="4" fill="#fda4af"/>
+                `;
+            }
+
+            // ミニクイズキャラクターも同期
+            const quizCharSvg = document.getElementById('quiz-char-svg');
+            const mainCharSvg = document.getElementById('main-character-svg');
+            if (quizCharSvg && mainCharSvg) {
+                quizCharSvg.innerHTML = mainCharSvg.innerHTML;
+            }
+        }
+
+        // キャラクター表情変化
+        function setCharacterEmotion(emotion) {
+            const mouth = document.getElementById('char-mouth');
+            const container = document.getElementById('main-character-container');
+            const bubble = document.getElementById('char-bubble');
+
+            if (!mouth) return;
+
+            // アニメーションクラスリセット
+            container.classList.remove('char-happy', 'char-sad');
+
+            if (emotion === 'happy') {
+                mouth.setAttribute('d', 'M 85 110 Q 100 135 115 110 Z');
+                mouth.setAttribute('fill', '#f43f5e');
+                container.classList.add('char-happy');
+                if (bubble) bubble.textContent = "大正解ニャ！その調子！✨";
+            } else if (emotion === 'sad') {
+                mouth.setAttribute('d', 'M 85 125 Q 100 110 115 125');
+                mouth.setAttribute('fill', 'none');
+                container.classList.add('char-sad');
+                if (bubble) bubble.textContent = "ありゃりゃ…惜しいニャ！💦";
+            } else if (emotion === 'fever') {
+                mouth.setAttribute('d', 'M 80 108 Q 100 140 120 108 Z');
+                mouth.setAttribute('fill', '#fbbf24');
+                container.classList.add('char-happy');
+                if (bubble) bubble.textContent = "フィーバータイム到来ニャ！🔥";
+            } else { // normal
+                mouth.setAttribute('d', 'M 90 112 Q 100 122 110 112');
+                mouth.setAttribute('fill', 'none');
+                if (bubble) bubble.textContent = "今日もチャネル政策を極めよう！";
+            }
+
+            updateCharacterAppearance();
+        }
+
+        function triggerCharacterInteraction() {
+            playSound('click');
+            const bubble = document.getElementById('char-bubble');
+            const quotes = [
+                "商流と物流の違い、バッチリ覚えたニャ？",
+                "オムニチャネルは体験の一元化が大事ニャ！",
+                "POSシステムで死に筋排除ニャ！",
+                "頑張るとショップで可愛い服が買えるニャ！"
+            ];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            if (bubble) bubble.textContent = randomQuote;
+            
+            const container = document.getElementById('main-character-container');
+            container.classList.add('char-happy');
+            setTimeout(() => container.classList.remove('char-happy'), 600);
+        }
+
+        /* ヘッダー＆ステータス更新 */
+        function updateHeaderUI() {
+            document.getElementById('header-level').textContent = player.level;
+            document.getElementById('header-coins').textContent = player.coins;
+            
+            // 称号
+            const rankIndex = Math.min(player.level - 1, LEVEL_TITLES.length - 1);
+            document.getElementById('header-rank').textContent = LEVEL_TITLES[rankIndex];
+
+            // EXP計算 (Lv * 100 でレベルアップ)
+            const nextExp = player.level * 100;
+            const currentExp = player.exp % 100;
+            const expPercent = Math.min(100, Math.floor((currentExp / 100) * 100));
+            document.getElementById('header-exp-bar').style.width = `${expPercent}%`;
+
+            const shopCoins = document.getElementById('shop-coins-display');
+            if (shopCoins) shopCoins.textContent = player.coins;
+        }
+
+        /* EXP ＆ コイン獲得処理 */
+        function addRewards(earnedCoins, earnedExp) {
+            player.coins += earnedCoins;
+            player.exp += earnedExp;
+
+            // レベルアップ判定
+            const newLevel = Math.floor(player.exp / 100) + 1;
+            if (newLevel > player.level) {
+                player.level = newLevel;
+                playSound('levelup');
+                alertModal("🎉 LEVEL UP!", `おめでとうございます！レベル ${player.level} (${LEVEL_TITLES[Math.min(player.level-1, LEVEL_TITLES.length-1)]}) に到達しました！`);
+            } else {
+                playSound('coin');
+            }
+
+            updateHeaderUI();
+        }
+
+        /* ==========================================================================
+           クイズ進行ロジック（ステージ制・タイマー・複数選択）
+           ========================================================================== */
+
+        let currentQuizState = {
+            mode: 'chapter', // 'chapter' or 'dungeon'
             chapterId: 1,
+            stageId: 1, // 1 stage = 5 questions
+            dungeonFloor: 0,
             questions: [],
             currentIndex: 0,
-            correctCount: 0,
-            currentCombo: 0,
+            score: 0,
+            combo: 0,
             maxCombo: 0,
-            earnedXp: 0,
-            answered: false
+            earnedCoins: 0,
+            selectedMultiOptions: [],
+            timer: null,
+            timeLeft: 20
         };
 
-        /* ==========================================================================
-           PERSISTENCE (LocalStorage)
-           ========================================================================== */
-        function loadSavedState() {
-            try {
-                const saved = localStorage.getItem('channel_master_state');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    gameState = { ...gameState, ...parsed };
-                }
-            } catch (e) {
-                console.error("Could not load state", e);
-            }
-            updateHeaderUI();
-            renderHomeSummary();
-        }
+        // 章＆ステージクイズ開始
+        function startChapterStage(chapterId, stageId) {
+            closeModal('modal-chapter-select');
+            
+            const allChapterQ = QUIZ_DB[chapterId];
+            const startIdx = (stageId - 1) * 5;
+            const stageQuestions = allChapterQ.slice(startIdx, startIdx + 5);
 
-        function saveState() {
-            try {
-                localStorage.setItem('channel_master_state', JSON.stringify(gameState));
-            } catch (e) {
-                console.error("Could not save state", e);
-            }
-        }
-
-        /* ==========================================================================
-           NAVIGATION & SCREEN CONTROLLER
-           ========================================================================== */
-        function showScreen(screenId) {
-            const screens = ['home', 'chapters', 'quiz', 'result', 'dictionary'];
-            screens.forEach(s => {
-                const el = document.getElementById(`screen-${s}`);
-                if (el) el.classList.add('hidden');
-            });
-
-            const target = document.getElementById(`screen-${screenId}`);
-            if (target) {
-                target.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
-            if (screenId === 'home') {
-                renderHomeSummary();
-                updateHeaderUI();
-            } else if (screenId === 'chapters') {
-                renderChapterSelection();
-            } else if (screenId === 'dictionary') {
-                renderDictionary();
-            }
-        }
-
-        /* ==========================================================================
-           HOME & DASHBOARD RENDERERS
-           ========================================================================== */
-        function getLevelTitle(lvl) {
-            if (lvl < 3) return "見習いマーケター";
-            if (lvl < 6) return "流通のホープ";
-            if (lvl < 10) return "チャネルアナリスト";
-            if (lvl < 15) return "サプライチェーン達人";
-            return "チャネルマスター★";
-        }
-
-        function updateHeaderUI() {
-            document.getElementById('header-level').innerText = `Lv.${gameState.level}`;
-            document.getElementById('header-streak').innerText = gameState.streak;
-            document.getElementById('user-title').innerText = getLevelTitle(gameState.level);
-            document.getElementById('total-score-display').innerText = gameState.score.toLocaleString();
-
-            // XP Calculation: 100 XP per level
-            const currentLevelXp = gameState.xp % 100;
-            document.getElementById('level-label').innerText = `Level ${gameState.level}`;
-            document.getElementById('xp-label').innerText = `${currentLevelXp} / 100 XP`;
-            document.getElementById('xp-bar').style.width = `${currentLevelXp}%`;
-
-            // Calculate Overall Mastery
-            let totalQ = 0;
-            let totalCorrect = 0;
-            Object.values(gameState.history).forEach(h => {
-                totalQ++;
-                if (h.correct > 0) totalCorrect++;
-            });
-            const mastery = totalQ > 0 ? Math.min(100, Math.round((totalCorrect / 80) * 100)) : 0;
-            document.getElementById('overall-mastery-text').innerText = `${mastery}%`;
-
-            // Update weak questions label
-            document.getElementById('weak-count-label').innerText = `間違えた問題 (${gameState.weakList.length})`;
-        }
-
-        function renderHomeSummary() {
-            const container = document.getElementById('chapter-list-summary');
-            if (!container) return;
-
-            container.innerHTML = chapterData.map(ch => {
-                const chQuestions = quizDatabase[ch.id] || [];
-                let mastered = 0;
-                chQuestions.forEach(q => {
-                    const key = q.q;
-                    if (gameState.history[key] && gameState.history[key].correct > 0) {
-                        mastered++;
-                    }
-                });
-                const pct = Math.round((mastered / chQuestions.length) * 100);
-
-                return `
-                    <div onclick="startChapterQuiz(${ch.id})" class="p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:border-sky-400 transition active:scale-98">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-sky-600 dark:text-sky-400 flex items-center justify-center text-lg">
-                                <i class="fa-solid ${ch.icon}"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${ch.title}</h4>
-                                <span class="text-xs text-slate-400">${mastered} / ${chQuestions.length} 問習得</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <div class="text-right">
-                                <span class="text-xs font-bold text-sky-600 dark:text-sky-400">${pct}%</span>
-                                <div class="w-16 bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
-                                    <div class="bg-sky-500 h-full" style="width: ${pct}%"></div>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderChapterSelection() {
-            const container = document.getElementById('chapter-selection-list');
-            if (!container) return;
-
-            container.innerHTML = chapterData.map(ch => {
-                const chQuestions = quizDatabase[ch.id] || [];
-                let mastered = 0;
-                chQuestions.forEach(q => {
-                    if (gameState.history[q.q] && gameState.history[q.q].correct > 0) mastered++;
-                });
-                const pct = Math.round((mastered / chQuestions.length) * 100);
-
-                return `
-                    <div onclick="startChapterQuiz(${ch.id})" class="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition cursor-pointer active:scale-98 space-y-3">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 flex items-center justify-center text-xl">
-                                    <i class="fa-solid ${ch.icon}"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">${ch.title}</h3>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">${ch.desc}</p>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300">20問</span>
-                        </div>
-                        
-                        <div class="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-700/50">
-                            <div class="flex justify-between text-xs text-slate-400">
-                                <span>習得度</span>
-                                <span class="font-bold text-sky-600 dark:text-sky-400">${pct}% (${mastered}/20問)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                                <div class="bg-gradient-to-r from-sky-500 to-indigo-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        /* ==========================================================================
-           QUIZ ENGINE & LOGIC
-           ========================================================================== */
-        function shuffleArray(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
-        function startChapterQuiz(chId) {
-            const baseQ = quizDatabase[chId] || [];
-            currentSession = {
+            currentQuizState = {
                 mode: 'chapter',
-                chapterId: chId,
-                questions: shuffleArray(baseQ),
+                chapterId: chapterId,
+                stageId: stageId,
+                questions: stageQuestions,
                 currentIndex: 0,
-                correctCount: 0,
-                currentCombo: 0,
+                score: 0,
+                combo: 0,
                 maxCombo: 0,
-                earnedXp: 0,
-                answered: false
+                earnedCoins: 0,
+                selectedMultiOptions: [],
+                timer: null,
+                timeLeft: 20
             };
-            showScreen('quiz');
-            renderCurrentQuestion();
+
+            showQuizView();
+            loadQuestion();
         }
 
-        function startMode(modeType) {
-            if (modeType === 'final') {
-                // Collect 100 questions (80 core + duplicated shuffled for 100 speed challenge)
-                let all80 = [];
-                Object.values(quizDatabase).forEach(list => all80.push(...list));
-                let pool = shuffleArray(all80);
-                // Expand to exactly 100 questions
-                while (pool.length < 100) {
-                    pool.push(...shuffleArray(all80));
-                }
-                pool = pool.slice(0, 100);
+        // ダンジョンクイズ開始
+        function startDungeonFloor(floorIndex) {
+            closeModal('modal-dungeon-select');
 
-                currentSession = {
-                    mode: 'final',
-                    chapterId: 0,
-                    questions: pool,
-                    currentIndex: 0,
-                    correctCount: 0,
-                    currentCombo: 0,
-                    maxCombo: 0,
-                    earnedXp: 0,
-                    answered: false
-                };
-                showScreen('quiz');
-                renderCurrentQuestion();
-            } else if (modeType === 'weak') {
-                if (gameState.weakList.length === 0) {
-                    showModal("弱点問題なし", "現在、間違えた問題の記録はありません！素晴らしいです。", [
-                        { text: "OK", class: "bg-sky-600 text-white w-full py-3 rounded-xl font-bold", action: closeModal }
-                    ]);
-                    return;
-                }
-                currentSession = {
-                    mode: 'weak',
-                    chapterId: 0,
-                    questions: shuffleArray(gameState.weakList),
-                    currentIndex: 0,
-                    correctCount: 0,
-                    currentCombo: 0,
-                    maxCombo: 0,
-                    earnedXp: 0,
-                    answered: false
-                };
-                showScreen('quiz');
-                renderCurrentQuestion();
-            }
+            const floorQuestions = getDungeonQuestions(floorIndex);
+
+            currentQuizState = {
+                mode: 'dungeon',
+                dungeonFloor: floorIndex,
+                questions: floorQuestions,
+                currentIndex: 0,
+                score: 0,
+                combo: 0,
+                maxCombo: 0,
+                earnedCoins: 0,
+                selectedMultiOptions: [],
+                timer: null,
+                timeLeft: 20
+            };
+
+            showQuizView();
+            loadQuestion();
         }
 
-        function renderCurrentQuestion() {
-            const qData = currentSession.questions[currentSession.currentIndex];
-            currentSession.answered = false;
+        function showQuizView() {
+            document.getElementById('view-mode-select').classList.add('hidden');
+            document.getElementById('view-result').classList.add('hidden');
+            document.getElementById('view-quiz').classList.remove('hidden');
+        }
 
-            // Reset Card & Explanations UI
-            const explanationCard = document.getElementById('explanation-card');
-            explanationCard.classList.add('hidden');
+        function loadQuestion() {
+            const state = currentQuizState;
+            const q = state.questions[state.currentIndex];
 
-            // Header info
-            const badge = document.getElementById('quiz-chapter-badge');
-            if (currentSession.mode === 'chapter') {
-                badge.innerText = `第${currentSession.chapterId}節`;
-            } else if (currentSession.mode === 'final') {
-                badge.innerText = `総まとめ100問`;
+            // ヘッダー表示設定
+            if (state.mode === 'chapter') {
+                document.getElementById('quiz-stage-title').textContent = `第${state.chapterId}章 - Stage ${state.stageId}`;
             } else {
-                badge.innerText = `弱点克服`;
+                document.getElementById('quiz-stage-title').textContent = `ダンジョン ${state.dungeonFloor + 1} 階層`;
             }
 
-            document.getElementById('quiz-question-num').innerText = `問 ${currentSession.currentIndex + 1} / ${currentSession.questions.length}`;
+            document.getElementById('quiz-progress-text').textContent = `${state.currentIndex + 1} / ${state.questions.length}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((state.currentIndex + 1) / state.questions.length) * 100}%`;
+            document.getElementById('quiz-combo').textContent = state.combo;
 
-            // Progress bar
-            const pct = (currentSession.currentIndex / currentSession.questions.length) * 100;
-            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
-
-            // Combo display
-            const comboContainer = document.getElementById('combo-container');
-            if (currentSession.currentCombo >= 2) {
-                comboContainer.classList.remove('hidden');
-                comboContainer.classList.add('flex');
-                document.getElementById('combo-count').innerText = currentSession.currentCombo;
+            // フィーバーインジケータ
+            if (state.combo >= 3) {
+                document.getElementById('fever-indicator').classList.remove('hidden');
+                setCharacterEmotion('fever');
             } else {
-                comboContainer.classList.add('hidden');
-                comboContainer.classList.remove('flex');
+                document.getElementById('fever-indicator').classList.add('hidden');
+                setCharacterEmotion('normal');
             }
 
-            // Render Question Text
-            document.getElementById('question-text').innerText = qData.q;
+            // 問題種別バッジ & 選択ガイド
+            const typeBadge = document.getElementById('quiz-type-badge');
+            const multiGuide = document.getElementById('multi-select-guide');
+            const submitBtn = document.getElementById('btn-submit-multi');
 
-            // Render Choices (Shuffle choices while keeping track of correct index)
-            const choicesContainer = document.getElementById('choices-container');
-            choicesContainer.innerHTML = '';
+            state.selectedMultiOptions = [];
 
-            // Create choice objects with original indices
-            const choices = qData.options.map((opt, idx) => ({ text: opt, isCorrect: idx === qData.ans }));
-            const shuffledChoices = shuffleArray(choices);
+            if (q.isMulti) {
+                typeBadge.textContent = "複数選択 (チェック)";
+                typeBadge.className = "text-xs font-bold px-2.5 py-1 bg-emerald-900/80 text-emerald-300 rounded-lg border border-emerald-700";
+                multiGuide.classList.remove('hidden');
+                submitBtn.classList.remove('hidden');
+                updateSelectedCountUI();
+            } else {
+                typeBadge.textContent = "単一選択";
+                typeBadge.className = "text-xs font-bold px-2.5 py-1 bg-indigo-900/80 text-indigo-300 rounded-lg border border-indigo-700";
+                multiGuide.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+            }
 
-            shuffledChoices.forEach((c) => {
+            // 問題文
+            document.getElementById('quiz-question').textContent = q.question;
+            document.getElementById('quiz-char-speech').textContent = q.isMulti ? "当てはまる選択肢を全部選んでニャ！" : "正しいと思う選択肢を1つ選んでニャ！";
+
+            // 選択肢作成
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, idx) => {
                 const btn = document.createElement('button');
-                btn.className = `w-full text-left p-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-sm hover:border-sky-500 dark:hover:border-sky-400 active:scale-98 transition flex items-center justify-between font-bold text-sm md:text-base text-slate-800 dark:text-slate-100 touch-action-manipulation choice-btn`;
-                btn.innerHTML = `
-                    <span class="leading-relaxed">${c.text}</span>
-                    <div class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center shrink-0 ml-2 choice-indicator"></div>
-                `;
-                btn.onclick = () => handleAnswer(c.isCorrect, btn, qData);
-                choicesContainer.appendChild(btn);
+                btn.className = "w-full text-left p-4 rounded-2xl bg-slate-700/70 hover:bg-slate-700 border border-slate-600 transition flex items-center justify-between text-sm sm:text-base font-bold text-slate-100 active:scale-98 shadow-sm";
+                
+                if (q.isMulti) {
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="checkbox-icon text-slate-400 text-lg"><i class="fa-regular fa-square"></i></span>
+                            <span>${optText}</span>
+                        </div>
+                    `;
+                    btn.onclick = () => toggleMultiOption(idx, btn);
+                } else {
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-full bg-slate-800 text-indigo-300 flex items-center justify-center text-xs font-black border border-slate-600">${idx + 1}</span>
+                            <span>${optText}</span>
+                        </div>
+                    `;
+                    btn.onclick = () => selectSingleOption(idx);
+                }
+
+                optionsContainer.appendChild(btn);
             });
+
+            // タイマーリセット
+            resetQuestionTimer();
         }
 
-        function handleAnswer(isCorrect, clickedBtn, qData) {
-            if (currentSession.answered) return;
-            currentSession.answered = true;
+        /* タイマー処理 */
+        function resetQuestionTimer() {
+            if (currentQuizState.timer) clearInterval(currentQuizState.timer);
 
-            const explanationCard = document.getElementById('explanation-card');
-            const feedbackIcon = document.getElementById('feedback-icon');
-            const feedbackTitle = document.getElementById('feedback-title');
-            const feedbackSubtitle = document.getElementById('feedback-subtitle');
-            const explanationText = document.getElementById('explanation-text');
+            currentQuizState.timeLeft = 20;
+            updateTimerUI();
 
-            // Disable all choice buttons
-            const choiceBtns = document.querySelectorAll('.choice-btn');
-            choiceBtns.forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('opacity-70', 'cursor-not-allowed');
-            });
+            currentQuizState.timer = setInterval(() => {
+                currentQuizState.timeLeft--;
+                updateTimerUI();
 
-            // Tracking key
-            const qKey = qData.q;
-            if (!gameState.history[qKey]) gameState.history[qKey] = { correct: 0, wrong: 0 };
+                if (currentQuizState.timeLeft <= 0) {
+                    clearInterval(currentQuizState.timer);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timeText = document.getElementById('quiz-timer-text');
+            const timeBar = document.getElementById('quiz-timer-bar');
+            if (timeText && timeBar) {
+                timeText.textContent = currentQuizState.timeLeft;
+                const percent = (currentQuizState.timeLeft / 20) * 100;
+                timeBar.style.width = `${percent}%`;
+            }
+        }
+
+        function handleTimeOut() {
+            playSound('wrong');
+            setCharacterEmotion('sad');
+            alertModal("⏰ 時間切れ！", "制限時間内に回答できませんでしたニャ…");
+            processAnswerResult(false, "制限時間切れですニャ。");
+        }
+
+        /* 選択処理 (単一) */
+        function selectSingleOption(index) {
+            clearInterval(currentQuizState.timer);
+            const q = currentQuizState.questions[currentQuizState.currentIndex];
+            const isCorrect = (index === q.correct[0]);
+            
+            if (isCorrect) {
+                playSound('correct');
+                setCharacterEmotion('happy');
+            } else {
+                playSound('wrong');
+                setCharacterEmotion('sad');
+            }
+
+            processAnswerResult(isCorrect, q.explanation);
+        }
+
+        /* 選択処理 (複数トグル) */
+        function toggleMultiOption(index, btnElement) {
+            playSound('click');
+            const state = currentQuizState;
+            const checkIcon = btnElement.querySelector('.checkbox-icon');
+
+            if (state.selectedMultiOptions.includes(index)) {
+                state.selectedMultiOptions = state.selectedMultiOptions.filter(i => i !== index);
+                btnElement.classList.remove('border-emerald-500', 'bg-emerald-900/30');
+                if (checkIcon) checkIcon.innerHTML = '<i class="fa-regular fa-square text-slate-400"></i>';
+            } else {
+                state.selectedMultiOptions.push(index);
+                btnElement.classList.add('border-emerald-500', 'bg-emerald-900/30');
+                if (checkIcon) checkIcon.innerHTML = '<i class="fa-solid fa-square-check text-emerald-400"></i>';
+            }
+
+            updateSelectedCountUI();
+        }
+
+        function updateSelectedCountUI() {
+            const badge = document.getElementById('selected-count-badge');
+            if (badge) {
+                badge.textContent = `選択中: ${currentQuizState.selectedMultiOptions.length}`;
+            }
+        }
+
+        function submitMultiChoice() {
+            clearInterval(currentQuizState.timer);
+            const state = currentQuizState;
+            const q = state.questions[state.currentIndex];
+
+            // 正解配列と完全一致か判定
+            const userSelected = [...state.selectedMultiOptions].sort();
+            const correctSorted = [...q.correct].sort();
+
+            const isCorrect = userSelected.length === correctSorted.length && 
+                              userSelected.every((val, index) => val === correctSorted[index]);
 
             if (isCorrect) {
-                // Correct Flow
-                sound.playCorrect();
-                currentSession.correctCount++;
-                currentSession.currentCombo++;
-                if (currentSession.currentCombo > currentSession.maxCombo) {
-                    currentSession.maxCombo = currentSession.currentCombo;
+                playSound('correct');
+                setCharacterEmotion('happy');
+            } else {
+                playSound('wrong');
+                setCharacterEmotion('sad');
+            }
+
+            processAnswerResult(isCorrect, q.explanation);
+        }
+
+        /* 正解・不正解後の処理モーダル */
+        function processAnswerResult(isCorrect, explanationText) {
+            const state = currentQuizState;
+
+            if (isCorrect) {
+                state.score++;
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+                // コイン計算（コンボ＆フィーバー倍率）
+                let baseCoins = 20;
+                if (state.combo >= 3) baseCoins *= 2; // フィーバー
+                state.earnedCoins += baseCoins;
+
+            } else {
+                state.combo = 0;
+            }
+
+            // 解説モーダル表示
+            const title = isCorrect ? "🎉 正解ニャ！" : "❌ 不正解ニャ…";
+            const coinsEarnedMsg = isCorrect ? `<p class="mt-2 text-amber-400 font-bold text-xs">+${state.combo >= 3 ? 40 : 20} G 獲得！</p>` : '';
+            
+            alertModal(title, `
+                <p class="text-sm text-slate-200 mb-3">${explanationText}</p>
+                ${coinsEarnedMsg}
+            `, () => {
+                // 次の問題へ
+                state.currentIndex++;
+                if (state.currentIndex < state.questions.length) {
+                    loadQuestion();
+                } else {
+                    finishQuizStage();
                 }
+            });
+        }
 
-                // XP & Score calculation
-                const comboBonus = Math.min(currentSession.currentCombo * 5, 25);
-                const gainedXp = 10 + comboBonus;
-                currentSession.earnedXp += gainedXp;
-                gameState.score += 100 + (currentSession.currentCombo * 20);
-                gameState.streak++;
-                if (gameState.streak > gameState.maxStreak) gameState.maxStreak = gameState.streak;
+        /* クイズステージ終了・リザルト処理 */
+        function finishQuizStage() {
+            const state = currentQuizState;
+            document.getElementById('view-quiz').classList.add('hidden');
+            document.getElementById('view-result').classList.remove('hidden');
 
-                gameState.history[qKey].correct++;
-                // Remove from weak list if previously present
-                gameState.weakList = gameState.weakList.filter(w => w.q !== qData.q);
+            const total = state.questions.length;
+            const scoreRatio = state.score / total;
 
-                // Styling clicked button
-                clickedBtn.classList.remove('border-slate-200', 'dark:border-slate-700', 'opacity-70');
-                clickedBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-900/30', 'text-emerald-700', 'dark:text-emerald-300', 'animate-bounce-short');
-                clickedBtn.querySelector('.choice-indicator').innerHTML = '<i class="fa-solid fa-check text-emerald-600 dark:text-emerald-400"></i>';
+            // ランク判定
+            let rank = 'B';
+            let rankColor = 'bg-slate-600 text-white';
+            if (scoreRatio === 1) {
+                rank = 'RANK S';
+                rankColor = 'bg-amber-400 text-slate-900 glow-gold';
+            } else if (scoreRatio >= 0.8) {
+                rank = 'RANK A';
+                rankColor = 'bg-indigo-500 text-white';
+            }
 
-                // Setup feedback card
-                explanationCard.className = "rounded-2xl p-5 space-y-3 transition-all duration-300 border bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 animate-pop mt-4";
-                feedbackIcon.className = "w-10 h-10 rounded-full flex items-center justify-center text-white text-xl font-bold bg-emerald-500";
-                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-                feedbackTitle.innerText = currentSession.currentCombo > 2 ? `正解！ (${currentSession.currentCombo} COMBO!)` : "正解！";
-                feedbackSubtitle.innerText = `+${gainedXp} XP 獲得！`;
+            const rankBadge = document.getElementById('result-rank-badge');
+            rankBadge.textContent = rank;
+            rankBadge.className = `inline-block px-4 py-1.5 rounded-full text-lg font-black ${rankColor} mb-4 shadow-lg`;
 
-            } else {
-                // Wrong Flow
-                sound.playWrong();
-                currentSession.currentCombo = 0;
-                gameState.streak = 0;
-                gameState.history[qKey].wrong++;
+            document.getElementById('result-score-text').textContent = `${state.score} / ${total} (${Math.floor(scoreRatio * 100)}%)`;
+            document.getElementById('result-coins-text').textContent = `+${state.earnedCoins} G`;
+            document.getElementById('result-maxcombo-text').textContent = `${state.maxCombo} Combo`;
+            
+            const expEarned = state.score * 10;
+            document.getElementById('result-exp-text').textContent = `+${expEarned} EXP`;
 
-                // Add to weak list if not already
-                if (!gameState.weakList.some(w => w.q === qData.q)) {
-                    gameState.weakList.push(qData);
+            // 進捗保存更新
+            if (state.mode === 'chapter') {
+                if (state.stageId > player.chapterProgress[state.chapterId]) {
+                    player.chapterProgress[state.chapterId] = state.stageId;
                 }
-
-                // Card Shake Effect
-                document.getElementById('question-card').classList.add('animate-shake');
-                setTimeout(() => document.getElementById('question-card').classList.remove('animate-shake'), 400);
-
-                // Highlight clicked button as wrong
-                clickedBtn.classList.remove('border-slate-200', 'dark:border-slate-700', 'opacity-70');
-                clickedBtn.classList.add('border-rose-500', 'bg-rose-50', 'dark:bg-rose-900/30', 'text-rose-700', 'dark:text-rose-300');
-                clickedBtn.querySelector('.choice-indicator').innerHTML = '<i class="fa-solid fa-xmark text-rose-600 dark:text-rose-400"></i>';
-
-                // Setup feedback card
-                explanationCard.className = "rounded-2xl p-5 space-y-3 transition-all duration-300 border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-100 animate-pop mt-4";
-                feedbackIcon.className = "w-10 h-10 rounded-full flex items-center justify-center text-white text-xl font-bold bg-rose-500";
-                feedbackIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                feedbackTitle.innerText = "不正解...";
-                feedbackSubtitle.innerText = "解説を確認してマスターしよう！";
+            } else if (state.mode === 'dungeon') {
+                if (state.dungeonFloor + 1 > player.dungeonProgress) {
+                    player.dungeonProgress = state.dungeonFloor + 1;
+                }
             }
 
-            explanationText.innerHTML = `<strong>【解説】</strong><br>${qData.exp}`;
-            explanationCard.classList.remove('hidden');
-
-            // XP Level Up Check
-            addXp(isCorrect ? 10 : 0);
-            saveState();
-            updateHeaderUI();
+            // 報酬加算
+            addRewards(state.earnedCoins, expEarned);
         }
 
-        function addXp(amount) {
-            const oldLevel = gameState.level;
-            gameState.xp += amount;
-            gameState.level = Math.floor(gameState.xp / 100) + 1;
-
-            if (gameState.level > oldLevel) {
-                sound.playLevelUp();
-                confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-                showModal("LEVEL UP!", `おめでとうございます！ Level ${gameState.level} に到達しました！\n称号: 【${getLevelTitle(gameState.level)}】`, [
-                    { text: "やったー！", class: "bg-amber-500 text-white w-full py-3 rounded-xl font-bold", action: closeModal }
-                ]);
-            }
+        function returnToMainMode() {
+            document.getElementById('view-result').classList.add('hidden');
+            document.getElementById('view-quiz').classList.add('hidden');
+            document.getElementById('view-mode-select').classList.remove('hidden');
+            setCharacterEmotion('normal');
         }
 
-        function nextQuestion() {
-            currentSession.currentIndex++;
-            if (currentSession.currentIndex < currentSession.questions.length) {
-                renderCurrentQuestion();
+        function nextStageOrRetry() {
+            const state = currentQuizState;
+            if (state.mode === 'chapter') {
+                if (state.stageId < 6) { // 全6ステージ（30問）
+                    startChapterStage(state.chapterId, state.stageId + 1);
+                } else {
+                    alertModal("章クリア！", "この章の全30問をクリアしましたニャ！すごいです！", () => returnToMainMode());
+                }
             } else {
-                finishQuizSession();
+                if (state.dungeonFloor < 9) { // 全10階層
+                    startDungeonFloor(state.dungeonFloor + 1);
+                } else {
+                    alertModal("ダンジョン制覇！", "全100問の総まとめダンジョンを完全制覇しましたニャ！！", () => returnToMainMode());
+                }
             }
-        }
-
-        function finishQuizSession() {
-            sound.playFanfare();
-            confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
-
-            const total = currentSession.questions.length;
-            const correct = currentSession.correctCount;
-            const accuracy = Math.round((correct / total) * 100);
-
-            document.getElementById('result-accuracy').innerText = `${accuracy}%`;
-            document.getElementById('result-xp').innerText = `+${currentSession.earnedXp}`;
-            document.getElementById('result-max-combo').innerText = `${currentSession.maxCombo}`;
-            document.getElementById('result-score-detail').innerText = `${total}問中 ${correct}問正解`;
-
-            if (accuracy === 100) {
-                document.getElementById('result-title').innerText = "PERFECT!! 全問正解！";
-                document.getElementById('result-subtitle').innerText = "パーフェクト達成！完璧な理解度です！";
-                document.getElementById('result-badge-icon').className = "fa-solid fa-crown text-amber-500 text-4xl";
-            } else if (accuracy >= 80) {
-                document.getElementById('result-title').innerText = "素晴らしい成績！";
-                document.getElementById('result-subtitle').innerText = "合格ラインを余裕でクリアしています！";
-                document.getElementById('result-badge-icon').className = "fa-solid fa-trophy text-amber-500 text-4xl";
-            } else {
-                document.getElementById('result-title').innerText = "トレーニング完了！";
-                document.getElementById('result-subtitle').innerText = "復習して弱点を克服していきましょう！";
-                document.getElementById('result-badge-icon').className = "fa-solid fa-medal text-sky-500 text-4xl";
-            }
-
-            showScreen('result');
-            saveState();
-        }
-
-        function retryCurrentQuiz() {
-            if (currentSession.mode === 'chapter') {
-                startChapterQuiz(currentSession.chapterId);
-            } else {
-                startMode(currentSession.mode);
-            }
-        }
-
-        function confirmExitQuiz() {
-            showModal("中断の確認", "学習を途中で終了してホームに戻りますか？", [
-                { text: "続ける", class: "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex-1 py-2.5 rounded-xl font-bold", action: closeModal },
-                { text: "ホームへ戻る", class: "bg-rose-600 text-white flex-1 py-2.5 rounded-xl font-bold", action: () => { closeModal(); showScreen('home'); } }
-            ]);
         }
 
         /* ==========================================================================
-           DICTIONARY / GLOSSARY ENGINE
+           モーダルダイアログ管理 (章選択 / ショップ / ロードマップ)
            ========================================================================== */
-        let activeDictCategory = 'all';
 
-        function setDictCategory(cat) {
-            activeDictCategory = cat;
-            document.querySelectorAll('.dict-tab').forEach(btn => {
-                btn.classList.remove('bg-sky-600', 'text-white');
-                btn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
-            });
-            event.target.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
-            event.target.classList.add('bg-sky-600', 'text-white');
-            filterDictionary();
+        function openModal(id) {
+            playSound('click');
+            document.getElementById(id).classList.remove('hidden');
         }
 
-        function filterDictionary() {
-            const query = document.getElementById('dict-search-input').value.toLowerCase().trim();
-            const container = document.getElementById('dictionary-list');
+        function closeModal(id) {
+            playSound('click');
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // 章＆ステージ選択モーダル描画
+        function openChapterSelectModal() {
+            const container = document.getElementById('chapter-list-container');
             container.innerHTML = '';
 
-            let list = [];
-            if (activeDictCategory === 'all') {
-                Object.values(quizDatabase).forEach(arr => list.push(...arr));
-            } else {
-                list = quizDatabase[activeDictCategory] || [];
-            }
+            const chapterTitles = {
+                1: "第1章：チャネル政策の概要（商流・物流・情報流など）",
+                2: "第2章：チャネルの選択と管理（開放/選択/排他・コンフリクト）",
+                3: "第3章：チャネル政策の動向（POS・SKU・EDI・SCM・SPA）",
+                4: "第4章：インターネット通販の進展（PB/NB・EC・オムニチャネル）"
+            };
 
-            // Filter search
-            if (query) {
-                list = list.filter(item => item.q.toLowerCase().includes(query) || item.exp.toLowerCase().includes(query) || item.options[item.ans].toLowerCase().includes(query));
-            }
-
-            if (list.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">該当する用語が見つかりませんでした。</p>`;
-                return;
-            }
-
-            list.forEach(item => {
-                const termName = item.options[item.ans];
-                const key = item.q;
-                const history = gameState.history[key];
-                const isMastered = history && history.correct > 0;
-
+            for (let ch = 1; ch <= 4; ch++) {
                 const card = document.createElement('div');
-                card.className = "p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2";
+                card.className = "bg-slate-900/80 p-4 rounded-2xl border border-slate-700 space-y-3";
+                
+                let stagesHTML = '<div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-2">';
+                for (let st = 1; st <= 6; st++) {
+                    const isUnlocked = st === 1 || (player.chapterProgress[ch] >= st - 1);
+                    const isCleared = player.chapterProgress[ch] >= st;
+
+                    let btnClass = "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed";
+                    if (isCleared) {
+                        btnClass = "bg-emerald-900/60 text-emerald-300 border-emerald-500 hover:bg-emerald-800";
+                    } else if (isUnlocked) {
+                        btnClass = "bg-indigo-600 text-white border-indigo-400 hover:bg-indigo-500";
+                    }
+
+                    stagesHTML += `
+                        <button ${isUnlocked ? `onclick="startChapterStage(${ch}, ${st})"` : 'disabled'} 
+                                class="p-2.5 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center ${btnClass}">
+                            <span>St. ${st}</span>
+                            <span class="text-[10px] opacity-80">${isCleared ? 'クリア' : (isUnlocked ? '挑戦' : '未解放')}</span>
+                        </button>
+                    `;
+                }
+                stagesHTML += '</div>';
+
                 card.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <span class="font-bold text-base text-sky-600 dark:text-sky-400">${termName}</span>
-                            ${isMastered ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><i class="fa-solid fa-check"></i> 習得済み</span>' : ''}
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-indigo-300">${chapterTitles[ch]}</h4>
+                        <span class="text-xs text-slate-400">進行度: ${player.chapterProgress[ch]} / 6 St</span>
+                    </div>
+                    ${stagesHTML}
+                `;
+                container.appendChild(card);
+            }
+
+            openModal('modal-chapter-select');
+        }
+
+        // ダンジョン階層選択モーダル描画
+        function openDungeonSelectModal() {
+            const container = document.getElementById('dungeon-list-container');
+            container.innerHTML = '';
+
+            for (let f = 0; f < 10; f++) {
+                const floorNum = f + 1;
+                const isUnlocked = f === 0 || player.dungeonProgress >= f;
+                const isCleared = player.dungeonProgress >= floorNum;
+
+                const card = document.createElement('button');
+                card.disabled = !isUnlocked;
+                card.onclick = () => startDungeonFloor(f);
+
+                let statusBadge = `<span class="text-[10px] text-slate-500">未解放</span>`;
+                let borderClass = "border-slate-700 bg-slate-900/40 opacity-60";
+
+                if (isCleared) {
+                    statusBadge = `<span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> 踏破済</span>`;
+                    borderClass = "border-emerald-500/50 bg-slate-900 hover:bg-slate-800";
+                } else if (isUnlocked) {
+                    statusBadge = `<span class="text-[10px] text-amber-400 font-bold">挑戦可能</span>`;
+                    borderClass = "border-amber-500/60 bg-slate-900 hover:bg-slate-800";
+                }
+
+                card.className = `p-4 rounded-2xl border text-left flex flex-col justify-between transition ${borderClass}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-black text-amber-300 text-sm">第 ${floorNum} 階層</span>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-xs text-slate-400">問題 ${f * 10 + 1} 〜 ${(f + 1) * 10}（10問）</p>
+                `;
+                container.appendChild(card);
+            }
+
+            openModal('modal-dungeon-select');
+        }
+
+        // ショップモーダル描画
+        function openShopModal() {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+
+            SHOP_ITEMS.forEach(item => {
+                const isOwned = player.inventory.includes(item.id);
+                const isEquipped = (player.equippedHat === item.id) || (player.equippedOutfit === item.id);
+
+                const div = document.createElement('div');
+                div.className = "bg-slate-900/80 p-4 rounded-2xl border border-slate-700 flex flex-col justify-between";
+
+                let actionBtnHTML = '';
+                if (isOwned) {
+                    if (isEquipped) {
+                        actionBtnHTML = `<button onclick="unequipItem('${item.id}', '${item.type}')" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 rounded-xl text-xs">外す</button>`;
+                    } else if (item.type !== 'item') {
+                        actionBtnHTML = `<button onclick="equipItem('${item.id}', '${item.type}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1.5 rounded-xl text-xs">装備する</button>`;
+                    } else {
+                        actionBtnHTML = `<span class="text-xs text-emerald-400 font-bold text-center block">所持中</span>`;
+                    }
+                } else {
+                    const canAfford = player.coins >= item.price;
+                    actionBtnHTML = `
+                        <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} 
+                                class="w-full ${canAfford ? 'bg-amber-500 hover:bg-amber-400 text-slate-900' : 'bg-slate-700 text-slate-500 cursor-not-allowed'} font-bold py-1.5 rounded-xl text-xs">
+                            ${item.price} G で購入
+                        </button>
+                    `;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="text-3xl bg-slate-800 p-2 rounded-xl">${item.icon}</div>
+                        <div>
+                            <h4 class="font-bold text-sm text-white">${item.name}</h4>
+                            <p class="text-[11px] text-slate-400">${item.desc}</p>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">${item.q}</p>
-                    <p class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 leading-relaxed">${item.exp}</p>
+                    <div class="mt-2">
+                        ${actionBtnHTML}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            openModal('modal-shop');
+        }
+
+        function buyShopItem(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (player.coins >= item.price) {
+                player.coins -= item.price;
+                player.inventory.push(itemId);
+                playSound('coin');
+                alertModal("購入完了！", `「${item.name}」を購入しましたニャ！`);
+                updateHeaderUI();
+                openShopModal();
+            }
+        }
+
+        function equipItem(itemId, type) {
+            playSound('click');
+            if (type === 'hat') player.equippedHat = itemId;
+            if (type === 'outfit') player.equippedOutfit = itemId;
+            updateCharacterAppearance();
+            openShopModal();
+        }
+
+        function unequipItem(itemId, type) {
+            playSound('click');
+            if (type === 'hat') player.equippedHat = null;
+            if (type === 'outfit') player.equippedOutfit = null;
+            updateCharacterAppearance();
+            openShopModal();
+        }
+
+        // ロードマップ＆報酬モーダル描画
+        function openRoadmapModal() {
+            const container = document.getElementById('roadmap-items-container');
+            container.innerHTML = '';
+
+            ROADMAP_REWARDS.forEach(reward => {
+                const isReached = player.level >= reward.level;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border ${isReached ? 'bg-slate-900 border-indigo-500/50' : 'bg-slate-900/40 border-slate-700 opacity-60'} flex justify-between items-center`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 font-black flex items-center justify-center border border-amber-500/30">
+                            Lv.${reward.level}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-white">${reward.title}</h4>
+                            <p class="text-xs text-amber-400 font-bold">特典: ${reward.reward}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs px-2.5 py-1 rounded-full font-bold ${isReached ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}">
+                            ${isReached ? '達成済' : '未到達'}
+                        </span>
+                    </div>
                 `;
                 container.appendChild(card);
             });
+
+            openModal('modal-roadmap');
         }
 
-        function renderDictionary() {
-            filterDictionary();
-        }
-
-        /* ==========================================================================
-           MODAL DIALOG SYSTEM
-           ========================================================================== */
-        function showModal(title, message, buttons = []) {
-            const overlay = document.getElementById('modal-overlay');
-            const content = document.getElementById('modal-content');
-
-            let btnHtml = buttons.map((b, idx) => `<button id="modal-btn-${idx}" class="${b.class}">${b.text}</button>`).join('');
-
-            content.innerHTML = `
-                <h3 class="font-black text-xl text-slate-800 dark:text-slate-100">${title}</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">${message}</p>
-                <div class="flex space-x-2 pt-2">${btnHtml}</div>
+        /* 汎用お知らせモーダル */
+        function alertModal(title, messageHTML, onCloseCallback = null) {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in";
+            modal.innerHTML = `
+                <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+                    <h3 class="text-lg font-black text-amber-300">${title}</h3>
+                    <div class="text-sm text-slate-300">${messageHTML}</div>
+                    <button id="modal-btn-close" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 text-sm">
+                        OK
+                    </button>
+                </div>
             `;
+            document.body.appendChild(modal);
 
-            buttons.forEach((b, idx) => {
-                document.getElementById(`modal-btn-${idx}`).onclick = b.action;
-            });
-
-            overlay.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').classList.add('hidden');
-        }
-
-        /* ==========================================================================
-           INITIALIZATION
-           ========================================================================== */
-        window.onload = function() {
-            loadSavedState();
-
-            // Sound Toggle Handler
-            document.getElementById('sound-toggle-btn').onclick = function() {
-                sound.enabled = !sound.enabled;
-                const icon = document.getElementById('sound-icon');
-                if (sound.enabled) {
-                    icon.className = "fa-solid fa-volume-high text-sky-600";
-                    sound.playCorrect();
-                } else {
-                    icon.className = "fa-solid fa-volume-xmark text-slate-400";
-                }
+            document.getElementById('modal-btn-close').onclick = () => {
+                playSound('click');
+                modal.remove();
+                if (onCloseCallback) onCloseCallback();
             };
+        }
+
+        /* 初期化 */
+        window.onload = function() {
+            updateHeaderUI();
+            updateCharacterAppearance();
         };
     </script>
 </body>
